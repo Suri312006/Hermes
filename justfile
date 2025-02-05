@@ -1,6 +1,6 @@
 default:
     echo 'Hello, world!'
 
-hermes: 
+sparta: 
     cd ./sparta && cargo run
 

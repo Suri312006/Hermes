@@ -11,7 +11,16 @@ message Message {
 message Ack {
 }
 
+message FetchReq{
+  string user = 1;
+  int32  number = 2;
+}
+
+message MessageList {
+  repeated Message inner = 1;
+}
 service MessageService {
   rpc Send(Message) returns (Ack);
+  rpc Fetch(FetchReq) returns (MessageList);
 }
 
