@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package hermes;
+
+message Message {
+  string recipient = 1;
+  string body = 2;
+}
+
+// WARN: do we want to have an ack back after sending a message?
+message Ack {
+}
+
+service MessageService {
+  rpc Send(Message) returns (Ack);
+}
+
