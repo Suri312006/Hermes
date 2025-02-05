@@ -1,0 +1,10 @@
+[workspace]
+
+members = [
+  "athens",
+  "sparta"
+]
+
+# use for edition 2024
+# resolver = "3"
+resolver = "1"
