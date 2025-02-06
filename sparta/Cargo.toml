@@ -24,5 +24,7 @@ dotenvy = "0.15.7"
 nanoid = "0.4.0"
 humantime = "2.1.0"
 
+oram = "0.1"
+rand = "=0.8.5"
 [build-dependencies]
 tonic-build = "0.12"

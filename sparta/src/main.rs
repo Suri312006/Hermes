@@ -7,6 +7,7 @@ mod grpc {
     tonic::include_proto!("hermes");
 }
 mod services;
+mod structures;
 
 #[tokio::main]
 async fn main() -> Result<()> {
