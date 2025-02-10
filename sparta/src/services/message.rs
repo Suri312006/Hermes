@@ -11,7 +11,7 @@ use crate::{
     primitives::oblivious_select::oblivious_select,
     structures::{
         messagestore::{MessageNode, MessageStore, Recipient, MESSAGE_SIZE},
-        userstore::UserStore,
+        userstore::{UserData, UserStore},
     },
 };
 
@@ -69,15 +69,21 @@ impl MessageService for MessageServer {
 
         message.copy_from_slice(body);
 
-        let user_store = self.user_store.lock().map_err(|e| {
-            error!("{e}");
-            Status::internal("Internal Error.")
-        })?;
+        let recipient_data = {
+            let mut user_store = self.user_store.lock().map_err(|e| {
+                error!("{e}");
+                Status::internal("Internal Error.")
+            })?;
 
-        let recipient_data = user_store.get(recipient).ok_or_else(|| {
-            info!("User not Found: {recipient}");
-            Status::not_found("User not found")
-        })?;
+            let prev_data = user_store.get(recipient).ok_or_else(|| {
+                info!("User not Found: {recipient}");
+                Status::not_found("User not found")
+            })?;
+
+            user_store.put(recipient, UserData::new(prev_data.head, nexttail));
+
+            prev_data
+        };
 
         self.message_store
             .lock()
@@ -136,19 +142,16 @@ impl MessageService for MessageServer {
             .parse()
             .map_err(|_| Status::new(tonic::Code::Internal, "Internal Error"))?;
 
-        let user_store = self
-            .user_store
-            .lock()
-            .map_err(|_| Status::internal("Internal Error."))?;
+        let user_data = {
+            let user_store = self
+                .user_store
+                .lock()
+                .map_err(|_| Status::internal("Internal Error."))?;
 
-        let mut message_store = self
-            .message_store
-            .lock()
-            .map_err(|_| Status::internal("Internal Error."))?;
-
-        let user_data = user_store
-            .get(recipient)
-            .ok_or_else(|| Status::not_found("Recipient not found."))?;
+            user_store
+                .get(recipient)
+                .ok_or_else(|| Status::not_found("Recipient not found."))?
+        };
 
         let mut messages: Vec<Message> = Vec::new();
 
@@ -168,9 +171,16 @@ impl MessageService for MessageServer {
 
             let access_addr = oblivious_select(condition, x, dummy);
 
-            let oram_result = message_store
-                .read(access_addr)
-                .ok_or_else(|| Status::internal("Internal Error."))?;
+            let oram_result = {
+                let mut message_store = self
+                    .message_store
+                    .lock()
+                    .map_err(|_| Status::internal("Internal Error."))?;
+
+                message_store
+                    .read(access_addr)
+                    .ok_or_else(|| Status::internal("Internal Error."))?
+            };
 
             // i have absolutely zero clue if this works lol
             let final_ptr = oblivious_select(

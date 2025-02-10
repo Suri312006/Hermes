@@ -1,9 +1,4 @@
-use core::str;
-
-use color_eyre::{
-    eyre::{Context, Result},
-    owo_colors::colors::css::MediumAquaMarine,
-};
+use color_eyre::eyre::{Context, Result};
 use oram::{
     path_oram::{DEFAULT_BLOCKS_PER_BUCKET, DEFAULT_RECURSION_CUTOFF, DEFAULT_STASH_OVERFLOW_SIZE},
     Address, BlockSize, BlockValue, BucketSize, Oram, OramError, PathOram, StashSize,
@@ -130,10 +125,11 @@ impl MessageNode {
 
 impl Into<Message> for MessageNode {
     fn into(self) -> Message {
-        todo!()
-        // Message {
-        //     recipient: String::from(core::str::from_utf8(&self.message)),
-        //     body: (),
-        // }
+        let recipient = Vec::from_iter(self.recipient.to_be_bytes().into_iter());
+        Message {
+            //NOTE: not sure if this is leakage
+            recipient: String::from_utf8(recipient).unwrap_or(String::from("InvalidRecipient")),
+            body: Vec::from_iter(self.message.into_iter()),
+        }
     }
 }

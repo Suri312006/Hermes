@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+#[derive(Copy, Clone)]
 pub struct UserData {
     pub head: u64,
     pub tail: u64,
@@ -12,7 +13,7 @@ identifiers to the head and tail of items in the message store.
 pub struct UserStore {
     //TODO: figure out the type for recipient
     // Make this an actual OMAP
-    inner: HashMap<u64, UserData>
+    inner: HashMap<u64, UserData>,
 }
 
 //TODO: implemented as an OMAP
@@ -27,8 +28,8 @@ impl UserStore {
         self.inner.insert(recipient, user_data);
     }
 
-    pub fn get(&self, recipient: u64) -> Option<&UserData> {
-        self.inner.get(&recipient)
+    pub fn get(&self, recipient: u64) -> Option<UserData> {
+        self.inner.get(&recipient).map(|i| *i)
     }
 }
 
