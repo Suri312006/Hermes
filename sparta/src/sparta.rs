@@ -1,7 +1,6 @@
 use std::{net::SocketAddr, str::FromStr};
 
 use color_eyre::eyre::{eyre, Result};
-use dotenvy::Result;
 use tonic::{
     server::ServerStreamingService,
     transport::{server::Router, Server},

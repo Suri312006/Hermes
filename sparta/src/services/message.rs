@@ -1,11 +1,14 @@
 use std::sync::{Arc, Mutex};
 
 use color_eyre::eyre::Result;
-use rand::random;
+use log::{error, info};
+use oram::Address;
+use rand::{random, RngCore};
 use tonic::{async_trait, Request, Response, Status};
 
 use crate::{
     grpc::{message_service_server::MessageService, Ack, FetchReq, Message, MessageList},
+    primitives::oblivious_select::oblivious_select,
     structures::{
         messagestore::{MessageNode, MessageStore, Recipient, MESSAGE_SIZE},
         userstore::UserStore,
@@ -58,7 +61,7 @@ impl MessageService for MessageServer {
             .parse()
             .map_err(|_| Status::new(tonic::Code::Internal, "Internal Error"))?;
 
-        let Some((body, _)) = req.body.as_str().as_bytes().split_at_checked(MESSAGE_SIZE) else {
+        let Some((body, _)) = req.body.as_slice().split_at_checked(MESSAGE_SIZE) else {
             return Err(Status::invalid_argument("Bad Message Body"));
         };
 
@@ -66,14 +69,15 @@ impl MessageService for MessageServer {
 
         message.copy_from_slice(body);
 
-        let user_store = self
-            .user_store
-            .lock()
-            .map_err(|_| Status::internal("Internal Error."))?;
+        let user_store = self.user_store.lock().map_err(|e| {
+            error!("{e}");
+            Status::internal("Internal Error.")
+        })?;
 
-        let recipient_data = user_store
-            .get(recipient)
-            .ok_or_else(|| Status::not_found("User not found"))?;
+        let recipient_data = user_store.get(recipient).ok_or_else(|| {
+            info!("User not Found: {recipient}");
+            Status::not_found("User not found")
+        })?;
 
         self.message_store
             .lock()
@@ -83,7 +87,11 @@ impl MessageService for MessageServer {
                 recipient,
                 recipient_data.tail,
                 nexttail,
-            ));
+            ))
+            .map_err(|e| {
+                error!("{e}");
+                Status::internal("Internal Error.")
+            })?;
 
         Ok(Response::new(Ack {}))
     }
@@ -123,6 +131,65 @@ impl MessageService for MessageServer {
         */
         let req = req.into_inner();
 
-        todo!()
+        let recipient: Recipient = req
+            .recipient
+            .parse()
+            .map_err(|_| Status::new(tonic::Code::Internal, "Internal Error"))?;
+
+        let user_store = self
+            .user_store
+            .lock()
+            .map_err(|_| Status::internal("Internal Error."))?;
+
+        let mut message_store = self
+            .message_store
+            .lock()
+            .map_err(|_| Status::internal("Internal Error."))?;
+
+        let user_data = user_store
+            .get(recipient)
+            .ok_or_else(|| Status::not_found("Recipient not found."))?;
+
+        let mut messages: Vec<Message> = Vec::new();
+
+        let mut x = user_data.head;
+
+        while messages.len() < req.amount as usize {
+            let dummy: Address = random();
+
+            let mut dummy_msg: [u8; MESSAGE_SIZE] = [0; MESSAGE_SIZE];
+
+            rand::thread_rng().fill_bytes(&mut dummy_msg);
+
+            let dummy_result: MessageNode =
+                MessageNode::new(dummy_msg, recipient.into(), dummy, random());
+
+            let condition = x != user_data.tail;
+
+            let access_addr = oblivious_select(condition, x, dummy);
+
+            let oram_result = message_store
+                .read(access_addr)
+                .ok_or_else(|| Status::internal("Internal Error."))?;
+
+            // i have absolutely zero clue if this works lol
+            let final_ptr = oblivious_select(
+                condition,
+                &raw const oram_result as u64,
+                &raw const dummy_result as u64,
+            );
+
+            let final_result: *const MessageNode = unsafe { std::mem::transmute(final_ptr) };
+
+            let final_message = unsafe { *final_result };
+
+            x = oblivious_select(condition, oram_result.next, x);
+
+            messages.push(final_message.into());
+        }
+
+        Ok(Response::new(MessageList { inner: messages }))
+
+        // todo!()
     }
 }

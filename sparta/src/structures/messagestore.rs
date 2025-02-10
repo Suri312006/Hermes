@@ -10,18 +10,21 @@ use oram::{
 };
 use rand::rngs::OsRng;
 
+use crate::grpc::Message;
+
 const DB_SIZE: Address = 64;
 const BUCKET_SIZE: BucketSize = DEFAULT_BLOCKS_PER_BUCKET;
-const BLOCK_SIZE: BlockSize = MESSAGE_SIZE + 24;
+const BLOCK_SIZE: BlockSize = 1024;
 
-pub const MESSAGE_SIZE: usize = 1024;
+pub const MESSAGE_SIZE: usize = BLOCK_SIZE - 24;
 pub type Recipient = u64;
 
+#[derive(Copy, Clone)]
 pub struct MessageNode {
     message: [u8; MESSAGE_SIZE],
     recipient: u64,
-    curr: Address,
-    next: Address,
+    pub curr: Address,
+    pub next: Address,
 }
 
 /**
@@ -122,5 +125,15 @@ impl MessageNode {
             curr,
             next,
         }
+    }
+}
+
+impl Into<Message> for MessageNode {
+    fn into(self) -> Message {
+        todo!()
+        // Message {
+        //     recipient: String::from(core::str::from_utf8(&self.message)),
+        //     body: (),
+        // }
     }
 }

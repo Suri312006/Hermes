@@ -4,7 +4,7 @@ package hermes;
 
 message Message {
   string recipient = 1;
-  string body = 2;
+  bytes body = 2;
 }
 
 // WARN: do we want to have an ack back after sending a message?
@@ -12,8 +12,8 @@ message Ack {
 }
 
 message FetchReq{
-  string user = 1;
-  int32  number = 2;
+  string recipient = 1;
+  int32  amount = 2;
 }
 
 message MessageList {
