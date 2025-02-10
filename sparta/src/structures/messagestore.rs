@@ -12,10 +12,15 @@ use rand::rngs::OsRng;
 
 const DB_SIZE: Address = 64;
 const BUCKET_SIZE: BucketSize = DEFAULT_BLOCKS_PER_BUCKET;
-const BLOCK_SIZE: BlockSize = 1032;
+const BLOCK_SIZE: BlockSize = MESSAGE_SIZE + 24;
 
-struct MessageNode {
-    message: [u8; BLOCK_SIZE - 8],
+pub const MESSAGE_SIZE: usize = 1024;
+pub type Recipient = u64;
+
+pub struct MessageNode {
+    message: [u8; MESSAGE_SIZE],
+    recipient: u64,
+    curr: Address,
     next: Address,
 }
 
@@ -54,32 +59,68 @@ impl MessageStore {
         Some(self.inner.read(address, &mut rng).ok()?.data.into())
     }
 
-    pub fn write(&mut self, address: Address, msg_node: MessageNode) -> Result<(), OramError> {
+    pub fn write(&mut self, msg_node: MessageNode) -> Result<(), OramError> {
         let mut rng = OsRng;
+
+        let curr = msg_node.curr;
 
         let data = BlockValue::new(msg_node.into());
 
-        self.inner.write(address, data, &mut rng).map(|_| ())
+        self.inner.write(curr, data, &mut rng).map(|_| ())
     }
 }
 impl From<[u8; BLOCK_SIZE]> for MessageNode {
     fn from(value: [u8; BLOCK_SIZE]) -> Self {
-        let mut message = [0_u8; BLOCK_SIZE - 8];
-        message.copy_from_slice(&value[0..BLOCK_SIZE - 8]);
+        let mut message = [0_u8; MESSAGE_SIZE];
+        message.copy_from_slice(&value[0..MESSAGE_SIZE]);
 
         let next: Address =
-            u64::from_be_bytes(value[BLOCK_SIZE - 8..BLOCK_SIZE].try_into().unwrap());
+            u64::from_be_bytes(value[MESSAGE_SIZE..MESSAGE_SIZE + 8].try_into().unwrap());
 
-        Self { message, next }
+        let curr: Address = u64::from_be_bytes(
+            value[MESSAGE_SIZE + 8..MESSAGE_SIZE + 16]
+                .try_into()
+                .unwrap(),
+        );
+        let recipient: Recipient = u64::from_be_bytes(
+            value[MESSAGE_SIZE + 16..MESSAGE_SIZE + 24]
+                .try_into()
+                .unwrap(),
+        );
+
+        Self {
+            message,
+            next,
+            curr,
+            recipient,
+        }
     }
 }
 
 impl Into<[u8; BLOCK_SIZE]> for MessageNode {
     fn into(self) -> [u8; BLOCK_SIZE] {
         let mut buf = [0_u8; BLOCK_SIZE];
-        buf[0..BLOCK_SIZE - 8].copy_from_slice(&self.message);
-        buf[BLOCK_SIZE - 8..BLOCK_SIZE].copy_from_slice(&self.next.to_be_bytes());
+        buf[0..MESSAGE_SIZE].copy_from_slice(&self.message);
+        buf[MESSAGE_SIZE..MESSAGE_SIZE + 8].copy_from_slice(&self.next.to_be_bytes());
+        buf[MESSAGE_SIZE + 8..MESSAGE_SIZE + 16].copy_from_slice(&self.curr.to_be_bytes());
+        buf[MESSAGE_SIZE + 16..MESSAGE_SIZE + 24].copy_from_slice(&self.recipient.to_be_bytes());
 
         buf
+    }
+}
+
+impl MessageNode {
+    pub fn new(
+        message: [u8; MESSAGE_SIZE],
+        recipient: Recipient,
+        curr: Address,
+        next: Address,
+    ) -> Self {
+        Self {
+            message,
+            recipient,
+            curr,
+            next,
+        }
     }
 }

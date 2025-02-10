@@ -13,7 +13,7 @@ mod structures;
 async fn main() -> Result<()> {
     color_eyre::install()?;
 
-    let server = Sparta::new();
+    let server = Sparta::new()?;
 
     server.run().await
 }

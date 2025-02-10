@@ -1,9 +1,8 @@
 use std::collections::HashMap;
 
-//TODO: these arent objivious yet
-struct UserData {
-    head: u64,
-    tail: u64,
+pub struct UserData {
+    pub head: u64,
+    pub tail: u64,
 }
 
 /*
@@ -30,5 +29,11 @@ impl UserStore {
 
     pub fn get(&self, recipient: u64) -> Option<&UserData> {
         self.inner.get(&recipient)
+    }
+}
+
+impl UserData {
+    pub fn new(head: u64, tail: u64) -> Self {
+        Self { head, tail }
     }
 }

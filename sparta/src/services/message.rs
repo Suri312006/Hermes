@@ -1,14 +1,28 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
+use color_eyre::eyre::Result;
+use rand::random;
 use tonic::{async_trait, Request, Response, Status};
 
-use crate::grpc::{message_service_server::MessageService, Ack, FetchReq, Message, MessageList};
+use crate::{
+    grpc::{message_service_server::MessageService, Ack, FetchReq, Message, MessageList},
+    structures::{
+        messagestore::{MessageNode, MessageStore, Recipient, MESSAGE_SIZE},
+        userstore::UserStore,
+    },
+};
 
-pub struct MessageServer {}
+pub struct MessageServer {
+    user_store: Mutex<UserStore>,
+    message_store: Mutex<MessageStore>,
+}
 
 impl MessageServer {
-    pub fn new() -> Self {
-        MessageServer {}
+    pub fn new() -> Result<Self> {
+        Ok(MessageServer {
+            user_store: Mutex::new(UserStore::setup()),
+            message_store: Mutex::new(MessageStore::setup()?),
+        })
     }
 }
 
@@ -26,9 +40,51 @@ impl MessageService for MessageServer {
         position for the current message and update it with the new tail value.
         Finally, we write back the message with the precomputed address of the
         next message to the message store.
-
-
         */
+
+        /*
+        nexttail <- U(0, 2^l - 1)
+        rand <- U(0, 2^l - 1)
+        (head, tail) <- US.update(r, (head, nexttail))
+        MS.access(write, rand, (r, tail, nexttail, m))
+        */
+
+        let req = req.into_inner();
+
+        let nexttail = random::<u64>();
+
+        let recipient: Recipient = req
+            .recipient
+            .parse()
+            .map_err(|_| Status::new(tonic::Code::Internal, "Internal Error"))?;
+
+        let Some((body, _)) = req.body.as_str().as_bytes().split_at_checked(MESSAGE_SIZE) else {
+            return Err(Status::invalid_argument("Bad Message Body"));
+        };
+
+        let mut message: [u8; MESSAGE_SIZE] = [0; MESSAGE_SIZE];
+
+        message.copy_from_slice(body);
+
+        let user_store = self
+            .user_store
+            .lock()
+            .map_err(|_| Status::internal("Internal Error."))?;
+
+        let recipient_data = user_store
+            .get(recipient)
+            .ok_or_else(|| Status::not_found("User not found"))?;
+
+        self.message_store
+            .lock()
+            .map_err(|_| Status::internal("Internal Error."))?
+            .write(MessageNode::new(
+                message,
+                recipient,
+                recipient_data.tail,
+                nexttail,
+            ));
+
         Ok(Response::new(Ack {}))
     }
 
@@ -49,6 +105,21 @@ impl MessageService for MessageServer {
         otherwise make dummy requests to the messages store to avoid
         leaking the true number of messages the user has in the message store.
 
+        */
+
+        /*
+        (first, last) <- US.update(r, (last, last))
+        x = first, M = {}
+        while |M| < k do
+            if x != last then
+                (r, curr, next, m) <- MS.access(read, x, NULL)
+                x = next
+            else
+                (_,_,_,m) <- MS.access(read, dummy, NULL)
+            endif
+            M = M union {m}
+        end while
+        return M
         */
         let req = req.into_inner();
 

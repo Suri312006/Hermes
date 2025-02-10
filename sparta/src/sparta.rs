@@ -1,6 +1,7 @@
 use std::{net::SocketAddr, str::FromStr};
 
 use color_eyre::eyre::{eyre, Result};
+use dotenvy::Result;
 use tonic::{
     server::ServerStreamingService,
     transport::{server::Router, Server},
@@ -13,9 +14,10 @@ pub struct Sparta {
 }
 
 impl Sparta {
-    pub fn new() -> Self {
-        let router = Server::builder().add_service(MessageServiceServer::new(MessageServer::new()));
-        Sparta { router }
+    pub fn new() -> Result<Self> {
+        let router =
+            Server::builder().add_service(MessageServiceServer::new(MessageServer::new()?));
+        Ok(Sparta { router })
     }
 
     pub async fn run(self) -> Result<()> {
