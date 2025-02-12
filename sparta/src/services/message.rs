@@ -158,14 +158,15 @@ impl MessageService for MessageServer {
         let mut x = user_data.head;
 
         while messages.len() < req.amount as usize {
+            // might be able to put this outside?
             let dummy: Address = random();
 
-            let mut dummy_msg: [u8; MESSAGE_SIZE] = [0; MESSAGE_SIZE];
+            // let mut dummy_msg: [u8; MESSAGE_SIZE] = [0; MESSAGE_SIZE];
 
-            rand::thread_rng().fill_bytes(&mut dummy_msg);
+            // rand::thread_rng().fill_bytes(&mut dummy_msg);
 
-            let dummy_result: MessageNode =
-                MessageNode::new(dummy_msg, recipient.into(), dummy, random());
+            // let dummy_result: MessageNode =
+            // MessageNode::new(dummy_msg, recipient.into(), dummy, random());
 
             let condition = x != user_data.tail;
 
@@ -183,19 +184,19 @@ impl MessageService for MessageServer {
             };
 
             // i have absolutely zero clue if this works lol
-            let final_ptr = oblivious_select(
-                condition,
-                &raw const oram_result as u64,
-                &raw const dummy_result as u64,
-            );
+            // let final_ptr = oblivious_select(
+            //     condition,
+            //     &raw const oram_result as u64,
+            //     &raw const dummy_result as u64,
+            // );
 
-            let final_result: *const MessageNode = unsafe { std::mem::transmute(final_ptr) };
+            // let final_result: *const MessageNode = unsafe { std::mem::transmute(final_ptr) };
 
-            let final_message = unsafe { *final_result };
+            // let final_message = unsafe { *final_result };
 
             x = oblivious_select(condition, oram_result.next, x);
 
-            messages.push(final_message.into());
+            messages.push(oram_result.into());
         }
 
         Ok(Response::new(MessageList { inner: messages }))
