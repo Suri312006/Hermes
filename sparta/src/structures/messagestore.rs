@@ -1,4 +1,5 @@
 use color_eyre::eyre::{Context, Result};
+use log::error;
 use oram::{
     path_oram::{DEFAULT_BLOCKS_PER_BUCKET, DEFAULT_RECURSION_CUTOFF, DEFAULT_STASH_OVERFLOW_SIZE},
     Address, BlockSize, BlockValue, BucketSize, Oram, OramError, PathOram, StashSize,
@@ -7,14 +8,14 @@ use rand::rngs::OsRng;
 
 use crate::grpc::Message;
 
-const DB_SIZE: Address = 64;
+pub const DB_SIZE: Address = 64;
 const BUCKET_SIZE: BucketSize = DEFAULT_BLOCKS_PER_BUCKET;
-const BLOCK_SIZE: BlockSize = 1024;
+const BLOCK_SIZE: BlockSize = 256;
 
 pub const MESSAGE_SIZE: usize = BLOCK_SIZE - 24;
 pub type Recipient = u64;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct MessageNode {
     message: [u8; MESSAGE_SIZE],
     recipient: u64,
@@ -54,7 +55,17 @@ impl MessageStore {
     pub fn read(&mut self, address: Address) -> Option<MessageNode> {
         let mut rng = OsRng;
 
-        Some(self.inner.read(address, &mut rng).ok()?.data.into())
+        Some(
+            self.inner
+                .read(address, &mut rng)
+                .map_err(|e| {
+                    error!("{e}");
+                    e
+                })
+                .ok()?
+                .data
+                .into(),
+        )
     }
 
     pub fn write(&mut self, msg_node: MessageNode) -> Result<(), OramError> {

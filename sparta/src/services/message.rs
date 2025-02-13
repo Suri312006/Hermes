@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 
 use color_eyre::eyre::Result;
-use log::{error, info};
+use log::{debug, error, info};
 use oram::Address;
 use rand::{random, RngCore};
 use tonic::{async_trait, Request, Response, Status};
@@ -9,6 +9,7 @@ use tonic::{async_trait, Request, Response, Status};
 use crate::{
     grpc::{message_service_server::MessageService, Ack, FetchReq, Message, MessageList},
     primitives::oblivious_select::oblivious_select,
+    rand_address,
     structures::{
         messagestore::{MessageNode, MessageStore, Recipient, MESSAGE_SIZE},
         userstore::{UserData, UserStore},
@@ -31,10 +32,8 @@ impl MessageServer {
 
 #[async_trait]
 impl MessageService for MessageServer {
-    /**
-    on a send, the location of the tail of the recipient is looked up in
-    the user store and the message is written at that location in the message store
-    **/
+    ///on a send, the location of the tail of the recipient is looked up in
+    ///the user store and the message is written at that location in the message store
     async fn send(self: Arc<Self>, req: Request<Message>) -> Result<Response<Ack>, Status> {
         /*
         In a send, we take in a recipient and a message. We first precompute
@@ -54,12 +53,12 @@ impl MessageService for MessageServer {
 
         let req = req.into_inner();
 
-        let nexttail = random::<u64>();
+        let nexttail = rand_address();
 
-        let recipient: Recipient = req
-            .recipient
-            .parse()
-            .map_err(|_| Status::new(tonic::Code::Internal, "Internal Error"))?;
+        let recipient: Recipient = req.recipient.parse().map_err(|_| {
+            error!("Unable to parse recipient.");
+            Status::new(tonic::Code::Internal, "Internal Error")
+        })?;
 
         let Some((body, _)) = req.body.as_slice().split_at_checked(MESSAGE_SIZE) else {
             return Err(Status::invalid_argument("Bad Message Body"));
@@ -102,10 +101,8 @@ impl MessageService for MessageServer {
         Ok(Response::new(Ack {}))
     }
 
-    /**
-         On a fetch, the user looks up the head of their queue in the message store,
-         then follows the pointer in each message node to the next message node.
-    **/
+    ///On a fetch, the user looks up the head of their queue in the message store,
+    ///then follows the pointer in each message node to the next message node.
     async fn fetch(
         self: Arc<Self>,
         req: Request<FetchReq>,
@@ -137,20 +134,25 @@ impl MessageService for MessageServer {
         */
         let req = req.into_inner();
 
-        let recipient: Recipient = req
-            .recipient
-            .parse()
-            .map_err(|_| Status::new(tonic::Code::Internal, "Internal Error"))?;
+        let recipient: Recipient = req.recipient.parse().map_err(|_| {
+            error!("unable to parse recipient");
+            Status::new(tonic::Code::Internal, "Internal Error")
+        })?;
 
         let user_data = {
-            let user_store = self
-                .user_store
-                .lock()
-                .map_err(|_| Status::internal("Internal Error."))?;
+            let user_store = self.user_store.lock().map_err(|_| {
+                error!("Failed to accquire user_store lock");
+                Status::internal("Internal Error.")
+            })?;
 
             user_store
                 .get(recipient)
                 .ok_or_else(|| Status::not_found("Recipient not found."))?
+
+            // UserData {
+            //     head: rand_address(),
+            //     tail: rand_address(),
+            // }
         };
 
         let mut messages: Vec<Message> = Vec::new();
@@ -159,48 +161,51 @@ impl MessageService for MessageServer {
 
         while messages.len() < req.amount as usize {
             // might be able to put this outside?
-            let dummy: Address = random();
+            let dummy: Address = rand_address();
 
-            // let mut dummy_msg: [u8; MESSAGE_SIZE] = [0; MESSAGE_SIZE];
+            let mut dummy_msg: [u8; MESSAGE_SIZE] = [0; MESSAGE_SIZE];
 
-            // rand::thread_rng().fill_bytes(&mut dummy_msg);
+            rand::thread_rng().fill_bytes(&mut dummy_msg);
 
-            // let dummy_result: MessageNode =
-            // MessageNode::new(dummy_msg, recipient.into(), dummy, random());
+            let dummy_result: MessageNode =
+                MessageNode::new(dummy_msg, recipient.into(), dummy, rand_address());
 
             let condition = x != user_data.tail;
 
             let access_addr = oblivious_select(condition, x, dummy);
 
             let oram_result = {
-                let mut message_store = self
-                    .message_store
-                    .lock()
-                    .map_err(|_| Status::internal("Internal Error."))?;
+                let mut message_store = self.message_store.lock().map_err(|_| {
+                    error!("Failed to accquire message_store lock");
+                    Status::internal("Internal Error.")
+                })?;
 
-                message_store
-                    .read(access_addr)
-                    .ok_or_else(|| Status::internal("Internal Error."))?
+                message_store.read(access_addr).ok_or_else(|| {
+                    error!("Failed to access addr");
+                    Status::internal("Internal Error.")
+                })?
             };
 
+            debug!("Real Result: {:?}", oram_result);
+            debug!("Dummy Result: {:?}", dummy_result);
+
             // i have absolutely zero clue if this works lol
-            // let final_ptr = oblivious_select(
-            //     condition,
-            //     &raw const oram_result as u64,
-            //     &raw const dummy_result as u64,
-            // );
+            let final_ptr = oblivious_select(
+                condition,
+                &raw const oram_result as u64,
+                &raw const dummy_result as u64,
+            );
 
-            // let final_result: *const MessageNode = unsafe { std::mem::transmute(final_ptr) };
+            let final_result: *const MessageNode = unsafe { std::mem::transmute(final_ptr) };
 
-            // let final_message = unsafe { *final_result };
+            let final_message = unsafe { *final_result };
 
             x = oblivious_select(condition, oram_result.next, x);
 
-            messages.push(oram_result.into());
+            // debug!("{:?}", final_message);
+            messages.push(final_message.into());
         }
 
         Ok(Response::new(MessageList { inner: messages }))
-
-        // todo!()
     }
 }

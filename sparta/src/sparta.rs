@@ -6,7 +6,7 @@ use tonic::{
     transport::{server::Router, Server},
 };
 
-use crate::{grpc::message_service_server::MessageServiceServer, services::MessageServer};
+use crate::{grpc::message_service_server::MessageServiceServer, services::MessageServer, Log};
 
 pub struct Sparta {
     router: Router,
@@ -14,6 +14,7 @@ pub struct Sparta {
 
 impl Sparta {
     pub fn new() -> Result<Self> {
+        Log::init()?;
         let router =
             Server::builder().add_service(MessageServiceServer::new(MessageServer::new()?));
         Ok(Sparta { router })

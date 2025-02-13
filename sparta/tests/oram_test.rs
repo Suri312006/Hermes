@@ -19,10 +19,12 @@ pub async fn oram_default_test() -> Result<()> {
 
     let soc = "http://[::1]:50051";
 
+    let recipient = "12345678".to_owned();
+
     let mut client = MessageServiceClient::connect(soc).await.unwrap();
     let res = client
         .fetch(FetchReq {
-            recipient: "123456789".to_owned(),
+            recipient,
             amount: 10,
         })
         .await
