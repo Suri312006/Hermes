@@ -1,3 +1,10 @@
+#[inline(always)]
+/// An implementation of Oblivious Selection as specified in
+/// section 2 of the paper.
+///
+/// (!(c-1)&a)|((c-1)&b)
+///
+/// Always inlined to prevent function call
 pub fn oblivious_select<T>(condition: bool, a: T, b: T) -> T
 where
     T: std::ops::BitAnd<Output = T>

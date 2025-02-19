@@ -29,7 +29,7 @@ impl UserStore {
     }
 
     pub fn get(&self, recipient: u64) -> Option<UserData> {
-        self.inner.get(&recipient).map(|i| *i)
+        self.inner.get(&recipient).copied()
     }
 }
 

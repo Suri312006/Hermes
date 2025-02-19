@@ -106,13 +106,13 @@ impl From<[u8; BLOCK_SIZE]> for MessageNode {
     }
 }
 
-impl Into<[u8; BLOCK_SIZE]> for MessageNode {
-    fn into(self) -> [u8; BLOCK_SIZE] {
+impl From<MessageNode> for [u8; BLOCK_SIZE] {
+    fn from(val: MessageNode) -> Self {
         let mut buf = [0_u8; BLOCK_SIZE];
-        buf[0..MESSAGE_SIZE].copy_from_slice(&self.message);
-        buf[MESSAGE_SIZE..MESSAGE_SIZE + 8].copy_from_slice(&self.next.to_be_bytes());
-        buf[MESSAGE_SIZE + 8..MESSAGE_SIZE + 16].copy_from_slice(&self.curr.to_be_bytes());
-        buf[MESSAGE_SIZE + 16..MESSAGE_SIZE + 24].copy_from_slice(&self.recipient.to_be_bytes());
+        buf[0..MESSAGE_SIZE].copy_from_slice(&val.message);
+        buf[MESSAGE_SIZE..MESSAGE_SIZE + 8].copy_from_slice(&val.next.to_be_bytes());
+        buf[MESSAGE_SIZE + 8..MESSAGE_SIZE + 16].copy_from_slice(&val.curr.to_be_bytes());
+        buf[MESSAGE_SIZE + 16..MESSAGE_SIZE + 24].copy_from_slice(&val.recipient.to_be_bytes());
 
         buf
     }
@@ -134,13 +134,13 @@ impl MessageNode {
     }
 }
 
-impl Into<Message> for MessageNode {
-    fn into(self) -> Message {
-        let recipient = Vec::from_iter(self.recipient.to_be_bytes().into_iter());
+impl From<MessageNode> for Message {
+    fn from(val: MessageNode) -> Self {
+        let recipient = Vec::from(val.recipient.to_be_bytes());
         Message {
             //NOTE: not sure if this is leakage
             recipient: String::from_utf8(recipient).unwrap_or(String::from("InvalidRecipient")),
-            body: Vec::from_iter(self.message.into_iter()),
+            body: Vec::from_iter(val.message.into_iter()),
         }
     }
 }

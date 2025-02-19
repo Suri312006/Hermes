@@ -1,5 +1,6 @@
 oram library:
 - https://github.com/facebook/oram?tab=readme-ov-file
+	- only secure inside of an enclave with memory encryption
 
 enclave framework:
 - https://github.com/fortanix/rust-sgx

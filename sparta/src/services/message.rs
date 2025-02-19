@@ -168,7 +168,7 @@ impl MessageService for MessageServer {
             rand::thread_rng().fill_bytes(&mut dummy_msg);
 
             let dummy_result: MessageNode =
-                MessageNode::new(dummy_msg, recipient.into(), dummy, rand_address());
+                MessageNode::new(dummy_msg, recipient, dummy, rand_address());
 
             let condition = x != user_data.tail;
 
@@ -196,7 +196,8 @@ impl MessageService for MessageServer {
                 &raw const dummy_result as u64,
             );
 
-            let final_result: *const MessageNode = unsafe { std::mem::transmute(final_ptr) };
+            let final_result: *const MessageNode = final_ptr as *const MessageNode;
+            // let final_result: *const MessageNode = unsafe { std::mem::transmute(final_ptr) };
 
             let final_message = unsafe { *final_result };
 
