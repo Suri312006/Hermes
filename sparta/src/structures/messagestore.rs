@@ -36,11 +36,9 @@ impl MessageStore {
     pub fn setup() -> Result<Self> {
         let mut rng = rand::rngs::OsRng;
 
-        let stash_size = StashSize::from(40_u16);
-
         // https://www.youtube.com/watch?v=iGfgngtVLr4
         // pathoram talk
-        let mut path_oram =
+        let path_oram =
             PathOram::<BlockValue<BLOCK_SIZE>, BUCKET_SIZE, BLOCK_SIZE>::new_with_parameters(
                 DB_SIZE,
                 &mut rng,

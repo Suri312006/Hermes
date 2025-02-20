@@ -9,3 +9,9 @@
 ## expansion
 -[ ] client side implementation with sqlite?
 -[ ] figure out how to get this building on fortranix sgx
+
+
+sgx feature
+
+when enabled, compiles for sgx using enclave runner
+otherwise just runs inside
