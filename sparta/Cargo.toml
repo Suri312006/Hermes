@@ -27,12 +27,8 @@ humantime = "2.1.0"
 oram = "0.1"
 rand = "=0.8.5"
 
-  enclave = {path = "../enclave", optional = true}
 
 [build-dependencies]
 tonic-build = "0.12"
 
-[features]
-sgx = [
-"dep:enclave"
-]
+
