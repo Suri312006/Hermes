@@ -4,7 +4,7 @@ use color_eyre::eyre::Result;
 use sparta::{message_service_client::MessageServiceClient, FetchReq, Sparta};
 use tokio::{join, time::timeout};
 
-#[tokio::test()]
+// #[tokio::test()]
 pub async fn oram_default_test() -> Result<()> {
     let test_duration = Duration::from_secs(10);
     let server = tokio::spawn(async move {

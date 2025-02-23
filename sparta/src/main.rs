@@ -8,7 +8,6 @@ async fn main() -> Result<()> {
 
     color_eyre::install()?;
 
-    if cfg!(feature = "sgx") {}
     let server = Sparta::new()?;
 
     server.run().await

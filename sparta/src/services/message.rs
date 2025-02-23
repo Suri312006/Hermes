@@ -189,7 +189,6 @@ impl MessageService for MessageServer {
             debug!("Real Result: {:?}", oram_result);
             debug!("Dummy Result: {:?}", dummy_result);
 
-            // i have absolutely zero clue if this works lol
             let final_ptr = oblivious_select(
                 condition,
                 &raw const oram_result as u64,

@@ -1,7 +1,7 @@
 [workspace]
 
 members = [
-  "athens", "enclave",
+  "athens", 
   "sparta"
 ]
 

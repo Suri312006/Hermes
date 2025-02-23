@@ -26,6 +26,9 @@ humantime = "2.1.0"
 
 oram = "0.1"
 rand = "=0.8.5"
+quickcheck = "1.0.3"
+quickcheck_macros = "1.0.0"
+itertools = "0.14.0"
 
 
 [build-dependencies]
