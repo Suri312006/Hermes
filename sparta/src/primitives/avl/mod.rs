@@ -46,7 +46,7 @@ impl<T: Ord> AvlTreeSet<T> {
             left: None,
             right: None,
             //WARN pretty sure this is wrong
-            height: 0,
+            height: 1,
         }));
 
         for node_ptr in prev_ptrs.into_iter().rev() {

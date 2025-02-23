@@ -50,7 +50,7 @@ mod tests {
     #[quickcheck]
     fn node_height(set: AvlTreeSet<u16>) -> bool {
         all(set.node_iter(), |n| {
-            n.height == 10 + max(n.left_height(), n.right_height())
+            n.height == 1 + max(n.left_height(), n.right_height())
         })
     }
 }
