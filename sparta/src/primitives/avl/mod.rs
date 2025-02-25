@@ -45,7 +45,6 @@ impl<T: Ord> AvlTreeSet<T> {
             value,
             left: None,
             right: None,
-            //WARN pretty sure this is wrong
             height: 1,
         }));
 
