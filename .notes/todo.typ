@@ -1,14 +1,21 @@
-# todo
-
-## main
--[ ] implement the OMAP for the user store
--[ ] Nice documentation for everything
--[ ] figure out how adding a user works (OMAP semantics)
+#import "@preview/cheq:0.2.2": checklist
 
 
-## expansion
--[ ] client side implementation with sqlite?
--[ ] figure out how to get this building on fortranix sgx
+
+#show: checklist
+
+= TODO for the thang
+
+== main
+- [ ] implement the OMAP for the user store
+- [ ] have a simple client side impl, preferably on pc / cli
+- [ ] Nice documentation for everything
+- [ ] figure out how adding a user works (OMAP semantics)
+
+
+== expansion
+- [ ] client side implementation with sqlite?
+- [ ] figure out how to get this building on fortranix sgx
 
 
 sgx feature
