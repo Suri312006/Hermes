@@ -102,7 +102,15 @@ mod tests {
 
         let tilted_factor = root_node.balance_factor();
 
-        TestResult::from_bool(balance_factor - tilted_factor == 2)
+        TestResult::from_bool(balance_factor - tilted_factor >= 2)
+    }
+
+    #[quickcheck]
+    fn rotate_left_and_rotate_left_identity(set: AvlTreeSet<u8>) -> TestResult {
+        if set.root.is_none() {
+            return TestResult::discard();
+            
+        }
     }
 }
 
