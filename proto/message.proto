@@ -8,6 +8,7 @@ message Message {
 }
 
 // WARN: do we want to have an ack back after sending a message?
+// why would we need an ack?
 message Ack {
 }
 

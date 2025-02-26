@@ -17,16 +17,16 @@ use crate::{
 };
 
 pub struct MessageServer {
-    user_store: Mutex<UserStore>,
-    message_store: Mutex<MessageStore>,
+    user_store: UserStore,
+    message_store: MessageStore,
 }
 
 impl MessageServer {
-    pub fn new() -> Result<Self> {
-        Ok(MessageServer {
-            user_store: Mutex::new(UserStore::setup()),
-            message_store: Mutex::new(MessageStore::setup()?),
-        })
+    pub fn new(user_store: UserStore, message_store: MessageStore) -> Self {
+        MessageServer {
+            user_store: user_store.clone(),
+            message_store: message_store.clone(),
+        }
     }
 }
 
@@ -140,7 +140,7 @@ impl MessageService for MessageServer {
         })?;
 
         let user_data = {
-            let user_store = self.user_store.lock().map_err(|_| {
+            let user_store = self.user_store.lock().map_err(|_e| {
                 error!("Failed to accquire user_store lock");
                 Status::internal("Internal Error.")
             })?;

@@ -1,4 +1,8 @@
-use std::{net::SocketAddr, str::FromStr};
+use std::{
+    net::SocketAddr,
+    str::FromStr,
+    sync::{Arc, Mutex},
+};
 
 use color_eyre::eyre::{eyre, Result};
 use tonic::{
@@ -6,7 +10,14 @@ use tonic::{
     transport::{server::Router, Server},
 };
 
-use crate::{grpc::message_service_server::MessageServiceServer, services::MessageServer, Log};
+use crate::{
+    grpc::message_service_server::MessageServiceServer,
+    messagestore::{MessageStore, MessageStoreInner},
+    services::MessageServer,
+    user_service_server::UserServiceServer,
+    userstore::UserStoreInner,
+    Log, UserServer,
+};
 
 pub struct Sparta {
     router: Router,
@@ -14,9 +25,21 @@ pub struct Sparta {
 
 impl Sparta {
     pub fn new() -> Result<Self> {
+        // ok not so
         Log::init()?;
-        let router =
-            Server::builder().add_service(MessageServiceServer::new(MessageServer::new()?));
+
+        let message_store = Arc::new(Mutex::new(MessageStoreInner::new()?));
+        let user_store = Arc::new(Mutex::new(UserStoreInner::new()));
+
+        let router = Server::builder()
+            .add_service(MessageServiceServer::new(MessageServer::new(
+                user_store,
+                message_store,
+            )))
+            .add_service(UserServiceServer::new(UserServer::new(
+                user_store,
+                message_store,
+            )));
         Ok(Sparta { router })
     }
 
@@ -25,5 +48,11 @@ impl Sparta {
         let socket = SocketAddr::from_str("[::1]:50051").expect("Parsing Socket Address Failed!");
         println!("Server Listening at {}!", socket);
         self.router.serve(socket).await.map_err(|e| eyre!(e))
+    }
+}
+
+impl Default for Sparta {
+    fn default() -> Self {
+        Self::new()
     }
 }

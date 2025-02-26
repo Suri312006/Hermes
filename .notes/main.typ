@@ -9,12 +9,14 @@
 	- https://francismurillo.github.io/2019-07-31-Understanding-Rust-Through-AVL-Trees/
 	- @oblix
 	- @wang
+	- maybe just do a trivial avl implementation and slap in oram to access nodes that way?
+		- $O(log^3(N))$ time complexity
 - [ ] user server implementation to create new user
 - [ ] have a simple client side impl, preferably on pc / cli
 - [ ] Nice documentation for everything
 - [ ] figure out how adding a user works (OMAP semantics)
 - [ ] End 2 End encryption
-		- Ask him what stuff I need
+
 
 == Post MVP
 - [ ] multi-device support via support of proxy

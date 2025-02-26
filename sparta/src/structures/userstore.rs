@@ -1,4 +1,7 @@
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 
 #[derive(Copy, Clone)]
 pub struct UserData {
@@ -10,15 +13,17 @@ pub struct UserData {
 The user store is implemented as an oblivious map and relates user
 identifiers to the head and tail of items in the message store.
 */
-pub struct UserStore {
+pub struct UserStoreInner {
     //TODO: figure out the type for recipient
     // Make this an actual OMAP
     inner: HashMap<u64, UserData>,
 }
 
+pub type UserStore = Arc<Mutex<UserStoreInner>>;
+
 //TODO: implemented as an OMAP
-impl UserStore {
-    pub fn setup() -> Self {
+impl UserStoreInner {
+    pub fn new() -> Self {
         Self {
             inner: HashMap::new(),
         }

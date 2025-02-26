@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex};
+
 use color_eyre::eyre::{Context, Result};
 use log::error;
 use oram::{
@@ -28,12 +30,15 @@ pub struct MessageNode {
     with each node storing a message and a pointer to the next node in the
     ORAM
 **/
-pub struct MessageStore {
+pub struct MessageStoreInner {
     inner: PathOram<BlockValue<BLOCK_SIZE>, 4, BLOCK_SIZE>,
 }
 
-impl MessageStore {
-    pub fn setup() -> Result<Self> {
+pub type MessageStore = Arc<Mutex<MessageStoreInner>>;
+
+impl MessageStoreInner {
+    /// in the paper its called setup but in rust we usually use new;
+    pub fn new() -> Result<Self> {
         let mut rng = rand::rngs::OsRng;
 
         // https://www.youtube.com/watch?v=iGfgngtVLr4
@@ -76,6 +81,7 @@ impl MessageStore {
         self.inner.write(curr, data, &mut rng).map(|_| ())
     }
 }
+
 impl From<[u8; BLOCK_SIZE]> for MessageNode {
     fn from(value: [u8; BLOCK_SIZE]) -> Self {
         let mut message = [0_u8; MESSAGE_SIZE];

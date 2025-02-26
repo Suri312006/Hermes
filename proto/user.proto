@@ -2,6 +2,19 @@ syntax = "proto3";
 
 package hermes;
 
-message NewUser{
-  
+message NewUserReq{
 }
+
+message NewUserRes {
+  string id = 1;
+}
+
+service UserService{
+  rpc CreateUser(NewUserReq) returns (NewUserRes);
+  //TODO: crud stuff later
+}
+
+
+
+
+
