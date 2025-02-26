@@ -7,6 +7,9 @@
 == MVP
 - [ ] implement the OMAP for the user store
 	- https://francismurillo.github.io/2019-07-31-Understanding-Rust-Through-AVL-Trees/
+	- @oblix
+	- @wang
+- [ ] user server implementation to create new user
 - [ ] have a simple client side impl, preferably on pc / cli
 - [ ] Nice documentation for everything
 - [ ] figure out how adding a user works (OMAP semantics)
@@ -40,6 +43,7 @@ Sparta
 = Questions for Kyle
 + Does sparta support users with multiple devices?
 + What sort of E2E encryption scheme can be added onto sparta?
++ How does authentication work with oblivious systems? 
 
 
 = Qucklinks
@@ -54,5 +58,8 @@ intel-sgx?
 - https://github.com/intel/linux-sgx-driver
 - i dont have the hardware
 
+
+
+#bibliography("refs.bib")
 
 

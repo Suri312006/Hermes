@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 
 use color_eyre::eyre::Result;
-use log::{debug, error, info};
+use log::{debug, error, info, warn};
 use oram::Address;
 use rand::{random, RngCore};
 use tonic::{async_trait, Request, Response, Status};
@@ -75,7 +75,7 @@ impl MessageService for MessageServer {
             })?;
 
             let prev_data = user_store.get(recipient).ok_or_else(|| {
-                info!("User not Found: {recipient}");
+                warn!("User not Found: {recipient}");
                 Status::not_found("User not found")
             })?;
 
