@@ -8,9 +8,9 @@ use oram::{
 };
 use rand::rngs::OsRng;
 
-use crate::grpc::Message;
+use crate::grpc::Packet;
 
-pub const DB_SIZE: Address = 64;
+pub const DB_SIZE: Address = 2_u64.pow(16);
 const BUCKET_SIZE: BucketSize = DEFAULT_BLOCKS_PER_BUCKET;
 const BLOCK_SIZE: BlockSize = 256;
 
@@ -138,10 +138,10 @@ impl MessageNode {
     }
 }
 
-impl From<MessageNode> for Message {
+impl From<MessageNode> for Packet {
     fn from(val: MessageNode) -> Self {
         let recipient = Vec::from(val.recipient.to_be_bytes());
-        Message {
+        Packet {
             //NOTE: not sure if this is leakage
             recipient: String::from_utf8(recipient).unwrap_or(String::from("InvalidRecipient")),
             body: Vec::from_iter(val.message.into_iter()),

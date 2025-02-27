@@ -3,7 +3,9 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-#[derive(Copy, Clone)]
+///  Head represents the pointer to the users first message / head
+
+#[derive(Copy, Clone, Debug)]
 pub struct UserData {
     pub head: u64,
     pub tail: u64,
@@ -13,6 +15,7 @@ pub struct UserData {
 The user store is implemented as an oblivious map and relates user
 identifiers to the head and tail of items in the message store.
 */
+#[derive(Debug)]
 pub struct UserStoreInner {
     //TODO: figure out the type for recipient
     // Make this an actual OMAP
@@ -29,8 +32,8 @@ impl UserStoreInner {
         }
     }
 
-    pub fn put(&mut self, recipient: u64, user_data: UserData) {
-        self.inner.insert(recipient, user_data);
+    pub fn put(&mut self, recipient: u64, user_data: UserData) -> Option<UserData> {
+        self.inner.insert(recipient, user_data)
     }
 
     pub fn get(&self, recipient: u64) -> Option<UserData> {

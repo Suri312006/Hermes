@@ -1,13 +1,12 @@
-use std::sync::{Arc, Mutex};
-
 use color_eyre::eyre::Result;
-use log::{debug, error, info, warn};
+use log::{debug, error, warn};
 use oram::Address;
-use rand::{random, RngCore};
+use rand::RngCore;
+use std::sync::Arc;
 use tonic::{async_trait, Request, Response, Status};
 
 use crate::{
-    grpc::{message_service_server::MessageService, Ack, FetchReq, Message, MessageList},
+    grpc::{message_service_server::MessageService, Ack, FetchReq, Packet, PacketList},
     primitives::oblivious_select::oblivious_select,
     rand_address,
     structures::{
@@ -22,7 +21,7 @@ pub struct MessageServer {
 }
 
 impl MessageServer {
-    pub fn new(user_store: UserStore, message_store: MessageStore) -> Self {
+    pub fn new(user_store: &UserStore, message_store: &MessageStore) -> Self {
         MessageServer {
             user_store: user_store.clone(),
             message_store: message_store.clone(),
@@ -34,7 +33,7 @@ impl MessageServer {
 impl MessageService for MessageServer {
     ///on a send, the location of the tail of the recipient is looked up in
     ///the user store and the message is written at that location in the message store
-    async fn send(self: Arc<Self>, req: Request<Message>) -> Result<Response<Ack>, Status> {
+    async fn send(self: Arc<Self>, req: Request<Packet>) -> Result<Response<Ack>, Status> {
         /*
         In a send, we take in a recipient and a message. We first precompute
         the address for the next send so that this can be stored in the new
@@ -106,7 +105,7 @@ impl MessageService for MessageServer {
     async fn fetch(
         self: Arc<Self>,
         req: Request<FetchReq>,
-    ) -> Result<Response<MessageList>, Status> {
+    ) -> Result<Response<PacketList>, Status> {
         /*
         In a fetch we take in the recipient and the volume of messages K to read.
         We first look up the head of the queue from the user store, then
@@ -148,14 +147,9 @@ impl MessageService for MessageServer {
             user_store
                 .get(recipient)
                 .ok_or_else(|| Status::not_found("Recipient not found."))?
-
-            // UserData {
-            //     head: rand_address(),
-            //     tail: rand_address(),
-            // }
         };
 
-        let mut messages: Vec<Message> = Vec::new();
+        let mut messages: Vec<Packet> = Vec::new();
 
         let mut x = user_data.head;
 
@@ -206,6 +200,6 @@ impl MessageService for MessageServer {
             messages.push(final_message.into());
         }
 
-        Ok(Response::new(MessageList { inner: messages }))
+        Ok(Response::new(PacketList { inner: messages }))
     }
 }

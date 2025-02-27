@@ -62,6 +62,17 @@ intel-sgx?
 
 
 
+= Kyle Notes
+
+
+encryption isnt sufficient to protect messaging
+
+"with enough metadata you dont really need content" - NSA
+
+theoretically sparta can have multiple layers
+an anonymyzing layer could be used to aggregate your devices and then pull them that way.
+
+
 #bibliography("refs.bib")
 
 

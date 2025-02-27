@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package hermes;
 
-message Message {
+message Packet {
   string recipient = 1;
   bytes body = 2;
 }
@@ -17,11 +17,11 @@ message FetchReq{
   int32  amount = 2;
 }
 
-message MessageList {
-  repeated Message inner = 1;
+message PacketList {
+  repeated Packet inner = 1;
 }
 service MessageService {
-  rpc Send(Message) returns (Ack);
-  rpc Fetch(FetchReq) returns (MessageList);
+  rpc Send(Packet) returns (Ack);
+  rpc Fetch(FetchReq) returns (PacketList);
 }
 

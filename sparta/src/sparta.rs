@@ -25,7 +25,6 @@ pub struct Sparta {
 
 impl Sparta {
     pub fn new() -> Result<Self> {
-        // ok not so
         Log::init()?;
 
         let message_store = Arc::new(Mutex::new(MessageStoreInner::new()?));
@@ -33,12 +32,12 @@ impl Sparta {
 
         let router = Server::builder()
             .add_service(MessageServiceServer::new(MessageServer::new(
-                user_store,
-                message_store,
+                &user_store,
+                &message_store,
             )))
             .add_service(UserServiceServer::new(UserServer::new(
-                user_store,
-                message_store,
+                &user_store,
+                &message_store,
             )));
         Ok(Sparta { router })
     }
@@ -48,11 +47,5 @@ impl Sparta {
         let socket = SocketAddr::from_str("[::1]:50051").expect("Parsing Socket Address Failed!");
         println!("Server Listening at {}!", socket);
         self.router.serve(socket).await.map_err(|e| eyre!(e))
-    }
-}
-
-impl Default for Sparta {
-    fn default() -> Self {
-        Self::new()
     }
 }

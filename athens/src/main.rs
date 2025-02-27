@@ -12,7 +12,8 @@ mod grpc {
 }
 use clap::Parser;
 use color_eyre::eyre::{eyre, Result};
-use grpc::Message;
+use grpc::{user_service_client::UserServiceClient, FetchReq, NewUserReq, Packet};
+use tonic::IntoRequest;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -39,6 +40,8 @@ async fn main() -> Result<()> {
         return Err(eyre!("Message too long!"));
     }
 
+    let mut user_client = UserServiceClient::connect(SERVER_URL).await?;
+
     let mut msg_client = grpc::message_service_client::MessageServiceClient::connect(SERVER_URL)
         .await
         .unwrap();
@@ -54,12 +57,36 @@ async fn main() -> Result<()> {
 
     println!("{:#?}", msg_buf);
 
+    let id = user_client
+        .create_user(NewUserReq {}.into_request())
+        .await?
+        .into_inner()
+        .id;
+
+    println!("got id!: {}", id);
+
     msg_client
-        .send(Message {
-            recipient: args.recipient_id.to_string(),
+        .send(Packet {
+            recipient: id.clone(),
             body: msg_buf.to_vec(),
         })
         .await?;
+
+    let msgs = msg_client
+        .fetch(FetchReq {
+            recipient: id,
+            amount: 2,
+        })
+        .await?
+        .into_inner();
+
+    for msg in msgs.inner {
+        println!(
+            "recipient: {:#?}, message: {:#?}",
+            msg.recipient,
+            String::from_utf8(msg.body)
+        );
+    }
 
     Ok(())
     // we need a grpc client
