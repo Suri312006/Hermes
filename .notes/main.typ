@@ -3,6 +3,7 @@
 #show: checklist
 
 = TODO 
+https://github.com/fortanix/rust-sgx/issues/401
 
 == MVP
 - [ ] implement the OMAP for the user store
@@ -11,7 +12,7 @@
 	- @wang
 	- maybe just do a trivial avl implementation and slap in oram to access nodes that way?
 		- $O(log^3(N))$ time complexity
-- [ ] user server implementation to create new user
+- [x] user server implementation to create new user
 - [ ] have a simple client side impl, preferably on pc / cli
 - [ ] Nice documentation for everything
 - [ ] figure out how adding a user works (OMAP semantics)
@@ -72,7 +73,7 @@ encryption isnt sufficient to protect messaging
 theoretically sparta can have multiple layers
 an anonymyzing layer could be used to aggregate your devices and then pull them that way.
 
-
 #bibliography("refs.bib")
+
 
 

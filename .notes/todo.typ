@@ -13,6 +13,8 @@
 - [ ] figure out how adding a user works (OMAP semantics)
 
 
+
+
 == expansion
 - [ ] client side implementation with sqlite?
 - [ ] figure out how to get this building on fortranix sgx
