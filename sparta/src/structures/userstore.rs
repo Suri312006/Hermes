@@ -55,41 +55,74 @@ impl UserStoreInner {
         Ok(Self { oram: path_oram })
     }
 
-    pub fn update_data(&mut self, recipient: u64, user_data: UserData) {
+    pub fn update_data(&mut self, recipient: u64, user_data: UserData) -> Result<(), OramError> {
+        debug!("Updating data for user: {recipient}");
         let mut rng = OsRng;
         for addr in 0..DB_SIZE {
-            let _ = self.oram.access(
-                addr,
-                |v| {
-                    let key_val: KeyVal = v.data.into();
-                    let new_block: [u8; BLOCK_SIZE] = KeyVal {
-                        recipient,
-                        user_data,
-                        exists: 1,
-                    }
-                    .into();
-                    let condition = key_val.recipient == recipient;
-                    let final_ptr = oblivious_select(
-                        condition,
-                        &raw const key_val as u64,
-                        &raw const new_block as u64,
-                    );
+            let new_value = {
+                let v = self.oram.read(addr, &mut rng)?;
+                let key_val: KeyVal = v.data.into();
+                let new_kv: KeyVal = KeyVal {
+                    recipient,
+                    user_data,
+                    exists: 1,
+                };
 
-                    let final_result = final_ptr as *const KeyVal;
+                let condition = key_val.recipient == recipient;
 
-                    unsafe {
-                        let block = *final_result;
-                        BlockValue { data: block.into() }
-                    }
-                },
-                &mut rng,
-            );
+                // [2025-03-07T11:35:57Z DEBUG sparta::structures::userstore] Updating data for user: 555558739
+                //
+                // [2025-03-07T11:35:57Z DEBUG sparta::structures::userstore]
+                // condition: false, , new_block: KeyVal { recipient:
+                // 555558739, user_data: UserData { head: 4511, tail: 73993 }, exists: 1 }
+                // key_val: KeyVal { recipient: 348604392, user_data: UserData { head: 23668, tail: 23668 }, exists: 1 }
+                //
+                // [2025-03-07T11:35:57Z DEBUG sparta::structures::userstore] Writing: KeyVal
+                // { recipient: 348604392, user_data: UserData { head: 23668, tail: 23668 },
+                // exists: 1 } to 0
+                //
+                // [2025-03-07T11:35:57Z DEBUG sparta::structures::userstore]
+                // condition: true,  new_block: KeyVal { recipient:
+                // 555558739, user_data: UserData { head: 4511, tail: 73993 }, exists: 1 }
+                //  key_val: KeyVal { recipient: 555558739, user_data: UserData
+                // { head: 4511, tail: 4511 }, exists: 1 },
+                //
+                // [2025-03-07T11:35:57Z DEBUG sparta::structures::userstore] Writing: KeyVal
+                // { recipient: 73993, user_data: UserData { head: 555558739, tail: 4511 },
+                // exists: 0 } to 1
+
+                debug!(
+                    "condition: {},  new_block: {:?}, key_val: {:?}",
+                    condition, new_kv, key_val,
+                );
+
+                let ptr_a = &raw const new_kv as u64;
+                let ptr_b = &raw const key_val as u64;
+
+                let final_ptr = oblivious_select(condition, ptr_a, ptr_b);
+
+                debug!("ptr_a: {ptr_a}, ptr_b: {ptr_b}, chosen: {final_ptr}");
+
+                let final_result = final_ptr as *const KeyVal;
+
+                unsafe {
+                    // debug!("Writing: {:?} to {addr}", *(ptr_a as *const KeyVal));
+                    let block = *final_result;
+                    BlockValue { data: block.into() }
+                }
+            };
+
+            self.oram.write(addr, new_value, &mut rng)?;
         }
+
+        Ok(())
     }
 
     pub fn add_user(&mut self, recipient: u64) -> Result<(), OramError> {
         // okay iterate through each entry
         let mut rng = OsRng;
+
+        debug!("Adding user: {recipient}");
 
         let mut chosen = 0;
 
@@ -105,14 +138,15 @@ impl UserStoreInner {
 
         let head = rand_address();
 
-        debug!("created user head address: {:?}", head);
-
-        let new_block: [u8; BLOCK_SIZE] = KeyVal {
+        // debug!("created user head address: {:?}", head);
+        let kv = KeyVal {
             recipient,
             user_data: UserData { head, tail: head },
             exists: 1,
-        }
-        .into();
+        };
+        debug!("written kv: {:?}", kv);
+
+        let new_block: [u8; BLOCK_SIZE] = kv.into();
 
         self.oram
             .write(chosen, BlockValue { data: new_block }, &mut rng)?;
@@ -122,6 +156,8 @@ impl UserStoreInner {
 
     pub fn get_data(&mut self, recipient: u64) -> Result<Option<UserData>, OramError> {
         let mut rng = OsRng;
+
+        debug!("Looking for recipient: {}", recipient);
 
         let mut data = None;
 
@@ -175,11 +211,7 @@ impl From<KeyVal> for [u8; BLOCK_SIZE] {
 }
 impl From<[u8; BLOCK_SIZE]> for KeyVal {
     fn from(value: [u8; BLOCK_SIZE]) -> Self {
-        let mut recip = [0_u8; 8];
-        recip.copy_from_slice(&value[0..8]);
-
         let recip: Recipient = u64::from_le_bytes(value[0..8].try_into().unwrap());
-
         let head: Address = u64::from_le_bytes(value[8..16].try_into().unwrap());
         let tail: Address = u64::from_le_bytes(value[16..24].try_into().unwrap());
 

@@ -89,7 +89,12 @@ impl MessageService for MessageServer {
                     Status::not_found("User not found")
                 })?;
 
-            user_store.update_data(recipient, UserData::new(prev_data.head, nexttail));
+            user_store
+                .update_data(recipient, UserData::new(prev_data.head, nexttail))
+                .map_err(|e| {
+                    error!("{e}");
+                    Status::internal("Internal Server Error.")
+                })?;
 
             prev_data
         };
