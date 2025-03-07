@@ -73,12 +73,18 @@ impl MessageService for MessageServer {
                 Status::internal("Internal Error.")
             })?;
 
-            let prev_data = user_store.get(recipient).ok_or_else(|| {
-                warn!("User not Found: {recipient}");
-                Status::not_found("User not found")
-            })?;
+            let prev_data = user_store
+                .get_data(recipient)
+                .map_err(|e| {
+                    error!("{e}");
+                    Status::internal("Internal Error.")
+                })?
+                .ok_or_else(|| {
+                    warn!("User not Found: {recipient}");
+                    Status::not_found("User not found")
+                })?;
 
-            user_store.put(recipient, UserData::new(prev_data.head, nexttail));
+            user_store.update_data(recipient, UserData::new(prev_data.head, nexttail));
 
             prev_data
         };
@@ -135,17 +141,21 @@ impl MessageService for MessageServer {
 
         let recipient: Recipient = req.recipient.parse().map_err(|_| {
             error!("unable to parse recipient");
-            Status::new(tonic::Code::Internal, "Internal Error")
+            Status::internal("Internal Error")
         })?;
 
         let user_data = {
-            let user_store = self.user_store.lock().map_err(|_e| {
+            let mut user_store = self.user_store.lock().map_err(|_e| {
                 error!("Failed to accquire user_store lock");
                 Status::internal("Internal Error.")
             })?;
 
             user_store
-                .get(recipient)
+                .get_data(recipient)
+                .map_err(|e| {
+                    error!("{:?}", e);
+                    Status::internal("Internal Error")
+                })?
                 .ok_or_else(|| Status::not_found("Recipient not found."))?
         };
 

@@ -1,4 +1,5 @@
 #[inline(always)]
+/// Returns a if condition, else b
 /// An implementation of Oblivious Selection as specified in
 /// section 2 of the paper.
 ///

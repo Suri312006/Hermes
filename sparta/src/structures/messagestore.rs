@@ -10,7 +10,7 @@ use rand::rngs::OsRng;
 
 use crate::grpc::Packet;
 
-pub const DB_SIZE: Address = 2_u64.pow(16);
+pub const DB_SIZE: Address = 2_u64.pow(17);
 const BUCKET_SIZE: BucketSize = DEFAULT_BLOCKS_PER_BUCKET;
 const BLOCK_SIZE: BlockSize = 256;
 

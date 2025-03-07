@@ -12,7 +12,13 @@ https://github.com/fortanix/rust-sgx/issues/401
 	- @wang
 	- maybe just do a trivial avl implementation and slap in oram to access nodes that way?
 		- $O(log^3(N))$ time complexity
+	- nahhh just do the dumb version, linked list user store, just compare each one
+		to make this version oblivious, need to traverse the entire list each time.
+			- $O(N log(N))$
+
 - [x] user server implementation to create new user
+- [ ] Add TLS
+
 - [ ] have a simple client side impl, preferably on pc / cli
 - [ ] Nice documentation for everything
 - [ ] figure out how adding a user works (OMAP semantics)

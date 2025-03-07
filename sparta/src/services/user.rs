@@ -41,10 +41,12 @@ impl UserService for UserServer {
 
         let user_id: u32 = thread_rng().gen();
 
-        let head = rand_address();
-
         // TODO: need to make sure this isnt a used up spot
-        user_store.put(user_id as u64, UserData::new(head, head));
+        user_store.add_user(user_id as u64).map_err(|e| {
+            error!("{:?}", e);
+
+            Status::new(tonic::Code::Internal, "Internal Error")
+        })?;
 
         debug!("{:#?}", user_store);
 

@@ -28,7 +28,7 @@ impl Sparta {
         Log::init()?;
 
         let message_store = Arc::new(Mutex::new(MessageStoreInner::new()?));
-        let user_store = Arc::new(Mutex::new(UserStoreInner::new()));
+        let user_store = Arc::new(Mutex::new(UserStoreInner::new()?));
 
         let router = Server::builder()
             .add_service(MessageServiceServer::new(MessageServer::new(
