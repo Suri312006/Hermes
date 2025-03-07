@@ -35,10 +35,7 @@ impl Sparta {
                 &user_store,
                 &message_store,
             )))
-            .add_service(UserServiceServer::new(UserServer::new(
-                &user_store,
-                &message_store,
-            )));
+            .add_service(UserServiceServer::new(UserServer::new(&user_store)));
         Ok(Sparta { router })
     }
 

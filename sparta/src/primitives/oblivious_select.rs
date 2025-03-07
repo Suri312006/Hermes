@@ -21,3 +21,22 @@ where
 
     (!mask) & a | (mask & b)
 }
+
+//TODO: could expand more on testing here
+#[cfg(test)]
+mod tests {
+    use super::oblivious_select;
+
+    #[test]
+    fn positive_test() {
+        let num = oblivious_select(true, 1, 2);
+
+        assert_eq!(num, 1)
+    }
+
+    #[test]
+    fn negative_test() {
+        let num = oblivious_select(false, 1, 2);
+        assert_eq!(num, 2)
+    }
+}

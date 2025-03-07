@@ -60,6 +60,11 @@ impl MessageService for MessageServer {
         })?;
 
         let Some((body, _)) = req.body.as_slice().split_at_checked(MESSAGE_SIZE) else {
+            error!(
+                "Couldnt Split Message, len: {:?}",
+                req.body.as_slice().len()
+            );
+
             return Err(Status::invalid_argument("Bad Message Body"));
         };
 
@@ -159,6 +164,8 @@ impl MessageService for MessageServer {
                 .ok_or_else(|| Status::not_found("Recipient not found."))?
         };
 
+        debug!("real_user_data: {:#?}", user_data);
+
         let mut messages: Vec<Packet> = Vec::new();
 
         let mut x = user_data.head;
@@ -184,6 +191,7 @@ impl MessageService for MessageServer {
                     Status::internal("Internal Error.")
                 })?;
 
+                debug!("ABOUT to read for real result: {:?}", access_addr);
                 message_store.read(access_addr).ok_or_else(|| {
                     error!("Failed to access addr");
                     Status::internal("Internal Error.")

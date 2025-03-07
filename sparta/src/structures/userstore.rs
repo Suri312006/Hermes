@@ -1,6 +1,7 @@
 use std::sync::{Arc, Mutex};
 
 use color_eyre::eyre::{Context, Result};
+use log::debug;
 use oram::{
     path_oram::{DEFAULT_BLOCKS_PER_BUCKET, DEFAULT_RECURSION_CUTOFF, DEFAULT_STASH_OVERFLOW_SIZE},
     Address, BlockSize, BlockValue, BucketSize, Oram, OramError, PathOram,
@@ -11,7 +12,8 @@ use crate::{oblivious_select::oblivious_select, rand_address};
 
 use super::messagestore::Recipient;
 
-const DB_SIZE: Address = 2_u64.pow(8);
+// const DB_SIZE: Address = 2_u64.pow(8);
+const DB_SIZE: Address = 2_u64.pow(1);
 const BUCKET_SIZE: BucketSize = DEFAULT_BLOCKS_PER_BUCKET;
 const BLOCK_SIZE: BlockSize = 32;
 
@@ -103,6 +105,8 @@ impl UserStoreInner {
 
         let head = rand_address();
 
+        debug!("created user head address: {:?}", head);
+
         let new_block: [u8; BLOCK_SIZE] = KeyVal {
             recipient,
             user_data: UserData { head, tail: head },
@@ -125,12 +129,19 @@ impl UserStoreInner {
             let block = self.oram.read(addr, &mut rng)?;
             let kv: Option<KeyVal> = Some(block.data.into());
 
+            debug!("addr: {:?}, block: {:?}", addr, kv);
+
             let condition = kv.unwrap().recipient == recipient;
+            unsafe {
+                debug!("condition: {}, kv: {:?}, data: {:?}", condition, kv, data);
+                let data_ptr =
+                    oblivious_select(condition, &raw const kv as u64, &raw const data as u64)
+                        as *const Option<UserData>;
 
-            let data_ptr = oblivious_select(condition, &raw const kv as u64, &raw const data as u64)
-                as *const Option<UserData>;
+                debug!("chosen: {:?}", *data_ptr);
 
-            unsafe { data = *data_ptr }
+                data = *data_ptr;
+            }
         }
 
         Ok(data)
@@ -144,7 +155,7 @@ impl UserData {
 }
 
 // sizeof 24 bytes
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 struct KeyVal {
     recipient: u64,
     user_data: UserData,

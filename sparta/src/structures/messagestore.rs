@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 
 use color_eyre::eyre::{Context, Result};
-use log::error;
+use log::{debug, error};
 use oram::{
     path_oram::{DEFAULT_BLOCKS_PER_BUCKET, DEFAULT_RECURSION_CUTOFF, DEFAULT_STASH_OVERFLOW_SIZE},
     Address, BlockSize, BlockValue, BucketSize, Oram, OramError, PathOram, StashSize,
@@ -58,6 +58,8 @@ impl MessageStoreInner {
     pub fn read(&mut self, address: Address) -> Option<MessageNode> {
         let mut rng = OsRng;
 
+        debug!("Reading address: {address}");
+
         Some(
             self.inner
                 .read(address, &mut rng)
@@ -75,6 +77,7 @@ impl MessageStoreInner {
         let mut rng = OsRng;
 
         let curr = msg_node.curr;
+        debug!("Writing address: {curr}");
 
         let data = BlockValue::new(msg_node.into());
 
@@ -140,11 +143,10 @@ impl MessageNode {
 
 impl From<MessageNode> for Packet {
     fn from(val: MessageNode) -> Self {
-        let recipient = Vec::from(val.recipient.to_be_bytes());
         Packet {
             //NOTE: not sure if this is leakage
-            recipient: String::from_utf8(recipient).unwrap_or(String::from("InvalidRecipient")),
-            body: Vec::from_iter(val.message.into_iter()),
+            recipient: val.recipient.to_string(),
+            body: Vec::from_iter(val.message),
         }
     }
 }

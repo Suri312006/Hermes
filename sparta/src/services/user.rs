@@ -6,23 +6,18 @@ use rand::{thread_rng, Rng};
 use tonic::{async_trait, Request, Response, Status};
 
 use crate::{
-    messagestore::MessageStore,
-    rand_address,
-    user_service_server::UserService,
-    userstore::{UserData, UserStore},
-    NewUserReq, NewUserRes,
+    messagestore::MessageStore, user_service_server::UserService, userstore::UserStore, NewUserReq,
+    NewUserRes,
 };
 
 pub struct UserServer {
     user_store: UserStore,
-    message_store: MessageStore,
 }
 
 impl UserServer {
-    pub fn new(user_store: &UserStore, message_store: &MessageStore) -> Self {
+    pub fn new(user_store: &UserStore) -> Self {
         UserServer {
             user_store: user_store.clone(),
-            message_store: message_store.clone(),
         }
     }
 }
@@ -48,7 +43,7 @@ impl UserService for UserServer {
             Status::new(tonic::Code::Internal, "Internal Error")
         })?;
 
-        debug!("{:#?}", user_store);
+        // debug!("{:#?}", user_store);
 
         Ok(Response::new(NewUserRes {
             id: user_id.to_string(),
