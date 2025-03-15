@@ -3,14 +3,14 @@ use log::{debug, error, trace, warn};
 use oram::Address;
 use std::sync::Arc;
 use tokio::time::Instant;
-use tonic::{async_trait, Request, Response, Status};
+use tonic::{Request, Response, Status, async_trait};
 
 use crate::{
-    grpc::{message_service_server::MessageService, Ack, FetchReq, Packet, PacketList},
+    grpc::{Ack, FetchReq, Packet, PacketList, message_service_server::MessageService},
     primitives::oblivious_select::oblivious_select,
     rand_address,
     structures::{
-        messagestore::{MessageNode, MessageStore, Recipient, MESSAGE_SIZE},
+        messagestore::{MESSAGE_SIZE, MessageNode, MessageStore, Recipient},
         userstore::{UserData, UserStore},
     },
 };
@@ -80,7 +80,14 @@ impl MessageService for MessageServer {
             })?;
 
             let prev_data = user_store
-                .get_data(recipient)
+                .update_data(
+                    recipient,
+                    UserData {
+                        head: rand_address(),
+                        tail: rand_address(),
+                    },
+                    false,
+                )
                 .map_err(|e| {
                     error!("{e}");
                     Status::internal("Internal Error.")
@@ -91,7 +98,7 @@ impl MessageService for MessageServer {
                 })?;
 
             user_store
-                .update_data(recipient, UserData::new(prev_data.head, nexttail))
+                .update_data(recipient, UserData::new(prev_data.head, nexttail), true)
                 .map_err(|e| {
                     error!("{e}");
                     Status::internal("Internal Server Error.")
@@ -167,8 +174,32 @@ impl MessageService for MessageServer {
                 Status::internal("Internal Error.")
             })?;
 
+            // use this to find the tail for the user
+            let user_data = user_store
+                .update_data(
+                    recipient,
+                    UserData {
+                        head: rand_address(),
+                        tail: rand_address(),
+                    },
+                    false,
+                )
+                .map_err(|e| {
+                    error!("{:?}", e);
+                    Status::internal("Internal Error")
+                })?
+                .ok_or_else(|| Status::not_found("Recipient not found."))?;
+
+            // write back the tail, should return old ver
             user_store
-                .get_data(recipient)
+                .update_data(
+                    recipient,
+                    UserData {
+                        head: user_data.tail,
+                        tail: user_data.tail,
+                    },
+                    true,
+                )
                 .map_err(|e| {
                     error!("{:?}", e);
                     Status::internal("Internal Error")

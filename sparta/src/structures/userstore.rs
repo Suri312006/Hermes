@@ -3,8 +3,8 @@ use std::sync::{Arc, Mutex};
 use color_eyre::eyre::{Context, Result};
 use log::debug;
 use oram::{
-    path_oram::{DEFAULT_BLOCKS_PER_BUCKET, DEFAULT_RECURSION_CUTOFF, DEFAULT_STASH_OVERFLOW_SIZE},
     Address, BlockSize, BlockValue, Oram, OramError, PathOram,
+    path_oram::{DEFAULT_BLOCKS_PER_BUCKET, DEFAULT_RECURSION_CUTOFF, DEFAULT_STASH_OVERFLOW_SIZE},
 };
 use rand::rngs::OsRng;
 
@@ -18,7 +18,7 @@ const DB_SIZE: Address = agora::USER_DB_SIZE;
 const BLOCK_SIZE: BlockSize = 32;
 
 ///  Head represents the pointer to the users first message / head
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct UserData {
     pub head: u64,
     pub tail: u64,
@@ -55,46 +55,68 @@ impl UserStoreInner {
         Ok(Self { oram: path_oram })
     }
 
-    pub fn update_data(&mut self, recipient: u64, user_data: UserData) -> Result<(), OramError> {
+    pub fn update_data(
+        &mut self,
+        recipient: u64,
+        user_data: UserData,
+        write: bool,
+    ) -> Result<Option<UserData>, OramError> {
         debug!("Updating data for user: {recipient}");
         let mut rng = OsRng;
+        let new_kv = KeyVal {
+            recipient,
+            user_data,
+            exists: 1,
+        };
+
+        let mut ret: KeyVal = [0_u8; 32].into();
+
         for addr in 0..DB_SIZE {
-            let new_value = {
-                let v = self.oram.read(addr, &mut rng)?;
-                let key_val: KeyVal = v.data.into();
-                let new_kv: KeyVal = KeyVal {
-                    recipient,
-                    user_data,
-                    exists: 1,
-                };
+            let block_val: KeyVal = self
+                .oram
+                .access(
+                    addr,
+                    |block| {
+                        // inside this closure we detemine if we want to update data
+                        let kv: KeyVal = block.data.into();
 
-                let condition = key_val.recipient == recipient;
+                        let condition = kv.recipient == recipient && write;
 
-                debug!(
-                    "condition: {},  new_block: {:?}, key_val: {:?}",
-                    condition, new_kv, key_val,
-                );
+                        let ptr_a = &raw const new_kv as u64;
+                        let ptr_b = &raw const kv as u64;
 
-                let ptr_a = &raw const new_kv as u64;
-                let ptr_b = &raw const key_val as u64;
+                        let final_ptr = oblivious_select(condition, ptr_a, ptr_b);
 
-                let final_ptr = oblivious_select(condition, ptr_a, ptr_b);
+                        let final_res = final_ptr as *const KeyVal;
 
-                debug!("ptr_a: {ptr_a}, ptr_b: {ptr_b}, chosen: {final_ptr}");
+                        unsafe {
+                            let block = *final_res;
+                            BlockValue { data: block.into() }
+                        }
+                    },
+                    &mut rng,
+                )?
+                .data
+                .into();
 
-                let final_result = final_ptr as *const KeyVal;
+            // we set ret to block val if recipient of block val and new_kv are the same
+            let cond = block_val.recipient == recipient;
 
-                unsafe {
-                    // debug!("Writing: {:?} to {addr}", *(ptr_a as *const KeyVal));
-                    let block = *final_result;
-                    BlockValue { data: block.into() }
-                }
-            };
+            let ptr_a = &raw const block_val as u64;
+            let ptr_b = &raw const ret as u64;
 
-            self.oram.write(addr, new_value, &mut rng)?;
+            let final_ptr = oblivious_select(cond, ptr_a, ptr_b);
+
+            let final_res = final_ptr as *const KeyVal;
+            unsafe { ret = *final_res }
         }
 
-        Ok(())
+        // we leak whether we found user or not, which is fine
+        if ret == [0_u8; 32].into() {
+            return Ok(None);
+        }
+
+        Ok(Some(ret.user_data))
     }
 
     pub fn add_user(&mut self, recipient: u64) -> Result<(), OramError> {
@@ -132,35 +154,6 @@ impl UserStoreInner {
 
         Ok(())
     }
-
-    pub fn get_data(&mut self, recipient: u64) -> Result<Option<UserData>, OramError> {
-        let mut rng = OsRng;
-
-        debug!("Looking for recipient: {}", recipient);
-
-        let mut data = None;
-
-        for addr in 0..DB_SIZE {
-            let block = self.oram.read(addr, &mut rng)?;
-            let kv: Option<KeyVal> = Some(block.data.into());
-
-            debug!("addr: {:?}, block: {:?}", addr, kv);
-
-            let condition = kv.unwrap().recipient == recipient;
-            unsafe {
-                debug!("condition: {}, kv: {:?}, data: {:?}", condition, kv, data);
-                let data_ptr =
-                    oblivious_select(condition, &raw const kv as u64, &raw const data as u64)
-                        as *const Option<UserData>;
-
-                debug!("chosen: {:?}", *data_ptr);
-
-                data = *data_ptr;
-            }
-        }
-
-        Ok(data)
-    }
 }
 
 impl UserData {
@@ -170,7 +163,7 @@ impl UserData {
 }
 
 // sizeof 24 bytes
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 struct KeyVal {
     recipient: u64,
     user_data: UserData,
