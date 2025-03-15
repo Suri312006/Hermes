@@ -21,16 +21,16 @@ mod grpc {
     tonic::include_proto!("hermes");
 }
 
-async fn my_async_function(mut msg_client: MessageServiceClient<Channel>, user_id: String) {
+async fn fetch_k(mut msg_client: MessageServiceClient<Channel>, user_id: String, k: i32) {
     let resp = msg_client
         .fetch(FetchReq {
             recipient: user_id,
-            amount: 1,
+            amount: k,
         })
         .await;
 }
 
-fn async_bench(c: &mut Criterion) {
+fn fetch_tests(c: &mut Criterion) {
     let mut msg_client = None;
     let mut user = None;
 
@@ -42,7 +42,8 @@ fn async_bench(c: &mut Criterion) {
         .spawn()
         .expect("Sparta failed to start!");
 
-    sleep(Duration::from_secs(5));
+    // wait for sparta to be up and availible
+    sleep(Duration::from_secs(8));
 
     runtime.block_on(async {
         let server_url = format!("http://{}", SPARTA_PORT);
@@ -66,13 +67,30 @@ fn async_bench(c: &mut Criterion) {
     let msg_client = &mut msg_client.unwrap();
     let user = user.unwrap();
 
-    c.bench_function("my_async_function", |b| {
+    let mut f = c.benchmark_group("Fetch");
+
+    f.bench_function("K = 1", |b| {
         b.to_async(&runtime)
-            .iter(async || my_async_function(msg_client.clone(), user.clone()).await);
+            .iter(async || fetch_k(msg_client.clone(), user.clone(), 1).await);
+    });
+
+    f.bench_function("K = 10", |b| {
+        b.to_async(&runtime)
+            .iter(async || fetch_k(msg_client.clone(), user.clone(), 10).await);
+    });
+
+    f.bench_function("K = 100", |b| {
+        b.to_async(&runtime)
+            .iter(async || fetch_k(msg_client.clone(), user.clone(), 100).await);
+    });
+
+    f.bench_function("K = 1000", |b| {
+        b.to_async(&runtime)
+            .iter(async || fetch_k(msg_client.clone(), user.clone(), 1000).await);
     });
 
     handle.kill().unwrap();
 }
 
-criterion_group!(benches, async_bench);
+criterion_group!(benches, fetch_tests);
 criterion_main!(benches);

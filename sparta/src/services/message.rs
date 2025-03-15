@@ -177,7 +177,7 @@ impl MessageService for MessageServer {
                 .ok_or_else(|| Status::not_found("Recipient not found."))?
         };
         let user_end = Instant::now();
-        info!("User store part: {:?}", user_end.duration_since(user_start));
+        trace!("User store part: {:?}", user_end.duration_since(user_start));
 
         debug!("real_user_data: {:#?}", user_data);
 
@@ -212,7 +212,7 @@ impl MessageService for MessageServer {
                 })?;
                 let lock_end = Instant::now();
 
-                info!("lock part: {:?}", lock_end.duration_since(lock_start));
+                trace!("lock part: {:?}", lock_end.duration_since(lock_start));
 
                 debug!("ABOUT to read for real result: {:?}", access_addr);
                 message_store.read(access_addr).ok_or_else(|| {
@@ -222,7 +222,7 @@ impl MessageService for MessageServer {
             };
             let oram_result_end = Instant::now();
 
-            info!(
+            trace!(
                 "oram_result part: {:?}",
                 oram_result_end.duration_since(oram_result_start)
             );
@@ -250,7 +250,7 @@ impl MessageService for MessageServer {
 
         let end = Instant::now();
 
-        info!("Fetch Processing Time: {:?}", end.duration_since(start));
+        trace!("Fetch Processing Time: {:?}", end.duration_since(start));
         Ok(Response::new(PacketList { inner: messages }))
     }
 }
