@@ -1,8 +1,10 @@
+use std::{net::SocketAddr, str::FromStr};
+
 /// Upper Limit for the amount of messages sparta can store.
-pub const MSG_DB_SIZE: u64 = 2_u64.pow(17);
+pub const MSG_DB_SIZE: u64 = 2_u64.pow(20);
 
 /// Upper Limit for the amount of users sparta can store.
-pub const USER_DB_SIZE: u64 = 2_u64.pow(8);
+pub const USER_DB_SIZE: u64 = 2_u64.pow(6);
 
 /// Oram Block size for the message store
 /// NOTE: must be to a power of 2
@@ -18,3 +20,6 @@ pub const MSG_RECIPIENT_SIZE: u8 = 8;
 /// store block.
 pub const MSG_SIZE: usize =
     MSG_STORE_BLOCK_SIZE - (2 * MSG_ADDRESS_SIZE) as usize - MSG_RECIPIENT_SIZE as usize;
+
+// The port that sparta will bind to.
+pub const SPARTA_PORT: &str = "[::1]:50051";

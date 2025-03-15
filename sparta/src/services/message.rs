@@ -1,5 +1,5 @@
 use color_eyre::eyre::Result;
-use log::{debug, error, warn};
+use log::{debug, error, trace, warn};
 use oram::Address;
 use rand::RngCore;
 use std::sync::Arc;

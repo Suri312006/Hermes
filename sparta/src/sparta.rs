@@ -5,6 +5,7 @@ use std::{
 };
 
 use color_eyre::eyre::{eyre, Result};
+use log::info;
 use tonic::{
     server::ServerStreamingService,
     transport::{server::Router, Server},
@@ -41,8 +42,9 @@ impl Sparta {
 
     pub async fn run(self) -> Result<()> {
         //TODO: probably want to make the port a config option
-        let socket = SocketAddr::from_str("[::1]:50051").expect("Parsing Socket Address Failed!");
-        println!("Server Listening at {}!", socket);
+        let socket =
+            SocketAddr::from_str(agora::SPARTA_PORT).expect("Parsing Socket Address Failed!");
+        info!("Server Listening at {}!", socket);
         self.router.serve(socket).await.map_err(|e| eyre!(e))
     }
 }
