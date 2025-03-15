@@ -1,4 +1,3 @@
-use std::{net::SocketAddr, str::FromStr};
 
 /// Upper Limit for the amount of messages sparta can store.
 pub const MSG_DB_SIZE: u64 = 2_u64.pow(20);

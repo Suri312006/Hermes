@@ -2,13 +2,10 @@ use std::sync::Arc;
 
 use color_eyre::eyre::Result;
 use log::error;
-use rand::{thread_rng, Rng};
-use tonic::{async_trait, Request, Response, Status};
+use rand::{Rng, thread_rng};
+use tonic::{Request, Response, Status, async_trait};
 
-use crate::{
-    user_service_server::UserService, userstore::UserStore, NewUserReq,
-    NewUserRes,
-};
+use crate::{NewUserReq, NewUserRes, user_service_server::UserService, userstore::UserStore};
 
 pub struct UserServer {
     user_store: UserStore,
@@ -34,7 +31,7 @@ impl UserService for UserServer {
             Status::new(tonic::Code::Internal, "Internal Error")
         })?;
 
-        let user_id: u32 = thread_rng().gen();
+        let user_id: u32 = thread_rng().r#gen();
 
         // TODO: need to make sure this isnt a used up spot
         user_store.add_user(user_id as u64).map_err(|e| {

@@ -18,15 +18,12 @@ https://github.com/fortanix/rust-sgx/issues/401
 	- nahhh just do the dumb version, linked list user store, just compare each one
 		to make this version oblivious, need to traverse the entire list each time.
 			- $O(N log(N))$
-- [ ] In the omap, make `get_data` and `update_data` have a similar trace.
-- [ ] benchmark throughput of the server
-
+- [x] benchmark throughput of the server
 - [x] user server implementation to create new user
-- [ ] Add TLS
-
+- [x] figure out how adding a user works (OMAP semantics)
+- [ ] In the omap, make `get_data` and `update_data` have a similar trace.
 - [ ] have a simple client side impl, preferably on pc / cli
 - [ ] Nice documentation for everything
-- [x] figure out how adding a user works (OMAP semantics)
 - [ ] End 2 End encryption
 
 
@@ -35,6 +32,9 @@ https://github.com/fortanix/rust-sgx/issues/401
 	- inspired by how groovy had the provider system
 	- to make sparta-ll into a provider based system, its fairly cheap to have a small
 		embedded device to act as a proxy for each user its not super unfeasable
+
+- [ ] Add TLS
+	- this would also require me to host it on a server
 
 - [ ] client side implementation with sqlite?
 #strike()[
