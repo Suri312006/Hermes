@@ -1,8 +1,9 @@
-use color_eyre::eyre::Result;
-use log::{debug, error, trace, warn};
+use color_eyre::eyre::{InstallError, Result};
+use log::{debug, error, info, trace, warn};
 use oram::Address;
 use rand::RngCore;
 use std::sync::Arc;
+use tokio::time::Instant;
 use tonic::{async_trait, Request, Response, Status};
 
 use crate::{
@@ -49,6 +50,7 @@ impl MessageService for MessageServer {
         (head, tail) <- US.update(r, (head, nexttail))
         MS.access(write, rand, (r, tail, nexttail, m))
         */
+        let start = Instant::now();
 
         let req = req.into_inner();
 
@@ -112,6 +114,9 @@ impl MessageService for MessageServer {
                 error!("{e}");
                 Status::internal("Internal Error.")
             })?;
+        let end = Instant::now();
+
+        info!("Send Processing Time: {:?}", end.duration_since(start));
 
         Ok(Response::new(Ack {}))
     }
@@ -147,12 +152,15 @@ impl MessageService for MessageServer {
         end while
         return M
         */
+        let start = Instant::now();
         let req = req.into_inner();
 
         let recipient: Recipient = req.recipient.parse().map_err(|_| {
             error!("unable to parse recipient");
             Status::internal("Internal Error")
         })?;
+
+        let user_start = Instant::now();
 
         let user_data = {
             let mut user_store = self.user_store.lock().map_err(|_e| {
@@ -168,6 +176,8 @@ impl MessageService for MessageServer {
                 })?
                 .ok_or_else(|| Status::not_found("Recipient not found."))?
         };
+        let user_end = Instant::now();
+        info!("User store part: {:?}", user_end.duration_since(user_start));
 
         debug!("real_user_data: {:#?}", user_data);
 
@@ -177,24 +187,32 @@ impl MessageService for MessageServer {
 
         while messages.len() < req.amount as usize {
             // might be able to put this outside?
+
             let dummy: Address = rand_address();
 
-            let mut dummy_msg: [u8; MESSAGE_SIZE] = [0; MESSAGE_SIZE];
+            // let mut dummy_msg: [u8; MESSAGE_SIZE] = [0; MESSAGE_SIZE];
 
-            rand::thread_rng().fill_bytes(&mut dummy_msg);
+            // rand::thread_rng().fill_bytes(&mut dummy_msg);
 
-            let dummy_result: MessageNode =
-                MessageNode::new(dummy_msg, recipient, dummy, rand_address());
+            // let dummy_result: MessageNode =
+            //     MessageNode::new(dummy_msg, recipient, dummy, rand_address());
 
             let condition = x != user_data.tail;
 
             let access_addr = oblivious_select(condition, x, dummy);
 
+            let oram_result_start = Instant::now();
+
             let oram_result = {
+                let lock_start = Instant::now();
+
                 let mut message_store = self.message_store.lock().map_err(|_| {
                     error!("Failed to accquire message_store lock");
                     Status::internal("Internal Error.")
                 })?;
+                let lock_end = Instant::now();
+
+                info!("lock part: {:?}", lock_end.duration_since(lock_start));
 
                 debug!("ABOUT to read for real result: {:?}", access_addr);
                 message_store.read(access_addr).ok_or_else(|| {
@@ -202,27 +220,37 @@ impl MessageService for MessageServer {
                     Status::internal("Internal Error.")
                 })?
             };
+            let oram_result_end = Instant::now();
 
-            debug!("Real Result: {:?}", oram_result);
-            debug!("Dummy Result: {:?}", dummy_result);
-
-            let final_ptr = oblivious_select(
-                condition,
-                &raw const oram_result as u64,
-                &raw const dummy_result as u64,
+            info!(
+                "oram_result part: {:?}",
+                oram_result_end.duration_since(oram_result_start)
             );
 
-            let final_result: *const MessageNode = final_ptr as *const MessageNode;
+            // debug!("Real Result: {:?}", oram_result);
+            // debug!("Dummy Result: {:?}", dummy_result);
+
+            // let final_ptr = oblivious_select(
+            //     condition,
+            //     &raw const oram_result as u64,
+            //     &raw const dummy_result as u64,
+            // );
+
+            // let final_result: *const MessageNode = final_ptr as *const MessageNode;
             // let final_result: *const MessageNode = unsafe { std::mem::transmute(final_ptr) };
 
-            let final_message = unsafe { *final_result };
+            // let final_message = unsafe { *final_result };
 
-            x = oblivious_select(condition, oram_result.next, x);
+            // x = oblivious_select(condition, oram_result.next, x);
 
             // debug!("{:?}", final_message);
-            messages.push(final_message.into());
+            // messages.push(final_message.into());
+            messages.push(oram_result.into());
         }
 
+        let end = Instant::now();
+
+        info!("Fetch Processing Time: {:?}", end.duration_since(start));
         Ok(Response::new(PacketList { inner: messages }))
     }
 }

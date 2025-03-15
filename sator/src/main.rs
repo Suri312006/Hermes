@@ -67,17 +67,16 @@ async fn main() -> Result<()> {
 
     let start = Instant::now();
 
-    let mut num = 0;
-    while start.elapsed() < Duration::from_secs(1) {
-        let resp = msg_client
-            .fetch(FetchReq {
-                recipient: user_2.id.to_string(),
-                amount: 1,
-            })
-            .await;
-        num += 1;
-    }
-    println!("num fetched: {num}");
+    // let mut num = 0;
+    // while start.elapsed() < Duration::from_secs(1) {
+    let resp = msg_client
+        .fetch(FetchReq {
+            recipient: user_2.id.to_string(),
+            amount: 333,
+        })
+        .await;
+    let end = Instant::now();
+    println!("num fetched: 333, time: {:?}", end.duration_since(start));
 
     // println!("sending 100 requests = {:?}", end.duration_since(start));
 

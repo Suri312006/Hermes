@@ -57,6 +57,8 @@ Sparta
 Sator
 - tester utiliy to help with seeding database
 
+= Things to note
+- my shit is 5-6x slower bru
 
 = Questions for Kyle
 + Does sparta support users with multiple devices?
@@ -76,10 +78,7 @@ intel-sgx?
 - https://github.com/intel/linux-sgx-driver
 - i dont have the hardware
 
-
-
 = Kyle Notes
-
 
 encryption isnt sufficient to protect messaging
 
