@@ -1,10 +1,12 @@
 [workspace]
 
 members = [ "agora",
-  "athens", "sator", 
-  "sparta"
+  "athens",
+  "sator", 
+  "sparta",
+  "documents/charts"
 ]
 
 # use for edition 2024
-# resolver = "3"
-resolver = "1"
+resolver = "3"
+# resolver = "1"
