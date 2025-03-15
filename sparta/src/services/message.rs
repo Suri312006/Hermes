@@ -1,7 +1,6 @@
-use color_eyre::eyre::{InstallError, Result};
-use log::{debug, error, info, trace, warn};
+use color_eyre::eyre::Result;
+use log::{debug, error, trace, warn};
 use oram::Address;
-use rand::RngCore;
 use std::sync::Arc;
 use tokio::time::Instant;
 use tonic::{async_trait, Request, Response, Status};
@@ -183,7 +182,7 @@ impl MessageService for MessageServer {
 
         let mut messages: Vec<Packet> = Vec::new();
 
-        let mut x = user_data.head;
+        let x = user_data.head;
 
         while messages.len() < req.amount as usize {
             // might be able to put this outside?

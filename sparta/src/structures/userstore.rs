@@ -4,7 +4,7 @@ use color_eyre::eyre::{Context, Result};
 use log::debug;
 use oram::{
     path_oram::{DEFAULT_BLOCKS_PER_BUCKET, DEFAULT_RECURSION_CUTOFF, DEFAULT_STASH_OVERFLOW_SIZE},
-    Address, BlockSize, BlockValue, BucketSize, Oram, OramError, PathOram,
+    Address, BlockSize, BlockValue, Oram, OramError, PathOram,
 };
 use rand::rngs::OsRng;
 

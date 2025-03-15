@@ -6,14 +6,11 @@ use std::{
 
 use color_eyre::eyre::{eyre, Result};
 use log::info;
-use tonic::{
-    server::ServerStreamingService,
-    transport::{server::Router, Server},
-};
+use tonic::transport::{server::Router, Server};
 
 use crate::{
     grpc::message_service_server::MessageServiceServer,
-    messagestore::{MessageStore, MessageStoreInner},
+    messagestore::MessageStoreInner,
     services::MessageServer,
     user_service_server::UserServiceServer,
     userstore::UserStoreInner,

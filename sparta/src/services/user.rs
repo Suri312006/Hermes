@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
 use color_eyre::eyre::Result;
-use log::{debug, error};
+use log::error;
 use rand::{thread_rng, Rng};
 use tonic::{async_trait, Request, Response, Status};
 
 use crate::{
-    messagestore::MessageStore, user_service_server::UserService, userstore::UserStore, NewUserReq,
+    user_service_server::UserService, userstore::UserStore, NewUserReq,
     NewUserRes,
 };
 
