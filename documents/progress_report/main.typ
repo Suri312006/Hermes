@@ -10,7 +10,7 @@
     ),
   ),
   index-terms: ("Anonymous Communication", "Meta-data private messaging"),
-  bibliography: bibliography("refs.bib"),
+  bibliography: bibliography("../refs.bib"),
   figure-supplement: [Fig.],
 )
 
