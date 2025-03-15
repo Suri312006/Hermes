@@ -51,16 +51,6 @@ async fn main() -> Result<()> {
             amount: 1,
         })
         .await;
-    // let resp = msg_client
-    //     .send(Packet {
-    //         recipient: user_2.id.to_string(),
-    //         body: x.clone(),
-    //     })
-    //     .await;
-    // }
-    // });
-
-    // send_handle.await?;
 
     let end = Instant::now();
     println!("latency for 1 request: {:?}", end.duration_since(start));
