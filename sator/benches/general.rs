@@ -94,6 +94,7 @@ fn fetch_benches(c: &mut Criterion) {
             .iter(async || fetch_k(msg_client.clone(), user.clone(), 1000).await);
     });
 
+    let _ = handle.try_wait();
     handle.kill().unwrap();
 }
 
@@ -103,7 +104,7 @@ fn send_benches(c: &mut Criterion) {
 
     let runtime = Builder::new_current_thread().enable_all().build().unwrap();
 
-    let handle = Command::new("cargo")
+    let mut handle = Command::new("cargo")
         .args(["run", "--release"])
         .current_dir(canonicalize(PathBuf::from_str("../sparta").unwrap()).unwrap())
         .spawn()
@@ -144,6 +145,9 @@ fn send_benches(c: &mut Criterion) {
             send(msg_client.clone(), user.clone(), message.clone()).await;
         });
     });
+
+    let _ = handle.try_wait();
+    handle.kill().unwrap();
 }
 
 async fn create_user(mut user_client: UserServiceClient<Channel>) {
@@ -157,7 +161,7 @@ async fn create_user(mut user_client: UserServiceClient<Channel>) {
 fn user_benches(c: &mut Criterion) {
     let mut user_client = None;
 
-    let handle = Command::new("cargo")
+    let mut handle = Command::new("cargo")
         .args(["run", "--release"])
         .current_dir(canonicalize(PathBuf::from_str("../sparta").unwrap()).unwrap())
         .spawn()
@@ -185,6 +189,8 @@ fn user_benches(c: &mut Criterion) {
             create_user(user_client.clone()).await;
         });
     });
+    let _ = handle.try_wait();
+    handle.kill().unwrap();
 }
 
 criterion_group!(benches, fetch_benches, send_benches, user_benches);

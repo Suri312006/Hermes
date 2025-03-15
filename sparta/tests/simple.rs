@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use agora::SPARTA_PORT;
 use color_eyre::eyre::Result;
 use sparta::{
     message_service_client::MessageServiceClient, user_service_client::UserServiceClient, FetchReq,
@@ -21,10 +22,13 @@ pub async fn simple_send_recv() -> Result<()> {
     });
     tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
 
-    let soc = "http://[::1]:50051";
-
-    let mut usr_client = UserServiceClient::connect(soc).await.unwrap();
-    let mut msg_client = MessageServiceClient::connect(soc).await.unwrap();
+    let server_url = format!("http://{}", SPARTA_PORT);
+    let mut usr_client = UserServiceClient::connect(server_url.clone())
+        .await
+        .unwrap();
+    let mut msg_client = MessageServiceClient::connect(server_url.clone())
+        .await
+        .unwrap();
 
     let recip = usr_client
         .create_user(NewUserReq {}.into_request())
