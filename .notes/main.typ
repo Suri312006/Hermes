@@ -59,6 +59,7 @@ Sator
 
 = Things to note
 - my shit is 5-6x slower bru
+	- facebook oram library is around 3-5 ms per access, main cause of slowdown, could be better with a different oram implementation
 
 = Questions for Kyle
 + Does sparta support users with multiple devices?

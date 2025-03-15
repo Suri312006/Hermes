@@ -116,7 +116,7 @@ impl MessageService for MessageServer {
             })?;
         let end = Instant::now();
 
-        info!("Send Processing Time: {:?}", end.duration_since(start));
+        trace!("Send Processing Time: {:?}", end.duration_since(start));
 
         Ok(Response::new(Ack {}))
     }

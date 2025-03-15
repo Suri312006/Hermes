@@ -43,8 +43,6 @@ impl UserService for UserServer {
             Status::new(tonic::Code::Internal, "Internal Error")
         })?;
 
-        // debug!("{:#?}", user_store);
-
         Ok(Response::new(NewUserRes {
             id: user_id.to_string(),
         }))
