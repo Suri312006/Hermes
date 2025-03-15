@@ -10,8 +10,11 @@ https://github.com/fortanix/rust-sgx/issues/401
 	- https://francismurillo.github.io/2019-07-31-Understanding-Rust-Through-AVL-Trees/
 	- @oblix
 	- @wang
-	- maybe just do a trivial avl implementation and slap in oram to access nodes that way?
-		- $O(log^3(N))$ time complexity
+	#strike()[
+		
+		- maybe just do a trivial avl implementation and slap in oram to access nodes that way?
+			- $O(log^3(N))$ time complexity
+	]
 	- nahhh just do the dumb version, linked list user store, just compare each one
 		to make this version oblivious, need to traverse the entire list each time.
 			- $O(N log(N))$
@@ -34,9 +37,10 @@ https://github.com/fortanix/rust-sgx/issues/401
 		embedded device to act as a proxy for each user its not super unfeasable
 
 - [ ] client side implementation with sqlite?
-
+#strike()[
 - [ ] figure out how to get this building on fortranix sgx
 	- If I dont reach this, could sell this as not feasable in such a short amount of time but looking forward to do it in the future.
+	]
 
 = Project Structure
 
@@ -49,6 +53,9 @@ Athens
 
 Sparta
 - Sparta LL implementation
+
+Sator
+- tester utiliy to help with seeding database
 
 
 = Questions for Kyle

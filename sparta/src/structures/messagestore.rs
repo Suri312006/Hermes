@@ -10,11 +10,11 @@ use rand::rngs::OsRng;
 
 use crate::grpc::Packet;
 
-pub const DB_SIZE: Address = 2_u64.pow(17);
-const BUCKET_SIZE: BucketSize = DEFAULT_BLOCKS_PER_BUCKET;
-const BLOCK_SIZE: BlockSize = 256;
+pub const DB_SIZE: Address = agora::MSG_DB_SIZE;
+const BLOCK_SIZE: BlockSize = agora::MSG_STORE_BLOCK_SIZE;
 
-pub const MESSAGE_SIZE: usize = BLOCK_SIZE - 24;
+pub const MESSAGE_SIZE: usize = agora::MSG_SIZE;
+
 pub type Recipient = u64;
 
 #[derive(Copy, Clone, Debug)]
@@ -44,7 +44,7 @@ impl MessageStoreInner {
         // https://www.youtube.com/watch?v=iGfgngtVLr4
         // pathoram talk
         let path_oram =
-            PathOram::<BlockValue<BLOCK_SIZE>, BUCKET_SIZE, BLOCK_SIZE>::new_with_parameters(
+            PathOram::<BlockValue<BLOCK_SIZE>, DEFAULT_BLOCKS_PER_BUCKET, BLOCK_SIZE>::new_with_parameters(
                 DB_SIZE,
                 &mut rng,
                 DEFAULT_STASH_OVERFLOW_SIZE,

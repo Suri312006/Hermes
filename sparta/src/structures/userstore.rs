@@ -12,9 +12,9 @@ use crate::{oblivious_select::oblivious_select, rand_address};
 
 use super::messagestore::Recipient;
 
-// const DB_SIZE: Address = 2_u64.pow(8);
-const DB_SIZE: Address = 2_u64.pow(1);
-const BUCKET_SIZE: BucketSize = DEFAULT_BLOCKS_PER_BUCKET;
+const DB_SIZE: Address = agora::USER_DB_SIZE;
+
+//TODO: why the fuck is the block size 32
 const BLOCK_SIZE: BlockSize = 32;
 
 ///  Head represents the pointer to the users first message / head
@@ -44,7 +44,7 @@ impl UserStoreInner {
         let mut rng = rand::rngs::OsRng;
 
         let path_oram =
-            PathOram::<BlockValue<BLOCK_SIZE>, BUCKET_SIZE, BLOCK_SIZE>::new_with_parameters(
+            PathOram::<BlockValue<BLOCK_SIZE>, DEFAULT_BLOCKS_PER_BUCKET, BLOCK_SIZE>::new_with_parameters(
                 DB_SIZE,
                 &mut rng,
                 DEFAULT_STASH_OVERFLOW_SIZE,
@@ -69,27 +69,6 @@ impl UserStoreInner {
                 };
 
                 let condition = key_val.recipient == recipient;
-
-                // [2025-03-07T11:35:57Z DEBUG sparta::structures::userstore] Updating data for user: 555558739
-                //
-                // [2025-03-07T11:35:57Z DEBUG sparta::structures::userstore]
-                // condition: false, , new_block: KeyVal { recipient:
-                // 555558739, user_data: UserData { head: 4511, tail: 73993 }, exists: 1 }
-                // key_val: KeyVal { recipient: 348604392, user_data: UserData { head: 23668, tail: 23668 }, exists: 1 }
-                //
-                // [2025-03-07T11:35:57Z DEBUG sparta::structures::userstore] Writing: KeyVal
-                // { recipient: 348604392, user_data: UserData { head: 23668, tail: 23668 },
-                // exists: 1 } to 0
-                //
-                // [2025-03-07T11:35:57Z DEBUG sparta::structures::userstore]
-                // condition: true,  new_block: KeyVal { recipient:
-                // 555558739, user_data: UserData { head: 4511, tail: 73993 }, exists: 1 }
-                //  key_val: KeyVal { recipient: 555558739, user_data: UserData
-                // { head: 4511, tail: 4511 }, exists: 1 },
-                //
-                // [2025-03-07T11:35:57Z DEBUG sparta::structures::userstore] Writing: KeyVal
-                // { recipient: 73993, user_data: UserData { head: 555558739, tail: 4511 },
-                // exists: 0 } to 1
 
                 debug!(
                     "condition: {},  new_block: {:?}, key_val: {:?}",
@@ -222,35 +201,3 @@ impl From<[u8; BLOCK_SIZE]> for KeyVal {
         }
     }
 }
-// use color_eyre::eyre::{Context, Result};
-// use oram::{
-//     path_oram::{DEFAULT_BLOCKS_PER_BUCKET, DEFAULT_RECURSION_CUTOFF, DEFAULT_STASH_OVERFLOW_SIZE},
-//     Address, BlockSize, BlockValue, BucketSize, PathOram,
-// };
-
-// pub const DB_SIZE: Address = 2_u64.pow(8);
-
-// // omap should be generic?
-// // T is the size that whatever you want to store in the Omap should be, to the nearest power of two
-// pub struct LinearOmap<const K: usize, const V: usize> {
-//     oram: PathOram<BlockValue< {K + V}>, 4, {K + V>}>,
-// }
-
-// // impl<const T: usize> LinearOmap<T> {
-// //     pub fn new(size: u64) -> Result<Self> {
-// //         let mut rng = rand::rngs::OsRng;
-
-// //         let path_oram =
-// //             PathOram::<BlockValue<T>, DEFAULT_BLOCKS_PER_BUCKET, T>::new_with_parameters(
-// //                 size,
-// //                 &mut rng,
-// //                 DEFAULT_STASH_OVERFLOW_SIZE,
-// //                 DEFAULT_RECURSION_CUTOFF,
-// //             )
-// //             .with_context(|| "Failure when trying to initalize PathORAM for Message Store.")?;
-
-// //         Ok(Self { oram: path_oram })
-// //     }
-
-// //     pub fn insert(key ,bytes: [u8; T]) {}
-// // }

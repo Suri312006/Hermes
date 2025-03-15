@@ -29,6 +29,9 @@ rand = "=0.8.5"
 quickcheck = "1.0.3"
 quickcheck_macros = "1.0.0"
 itertools = "0.14.0"
+clap = { version = "4.5.32", features = ["derive"] }
+
+agora = {path = "../agora"}
 
 
 [build-dependencies]
