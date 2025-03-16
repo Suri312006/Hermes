@@ -21,7 +21,7 @@ https://github.com/fortanix/rust-sgx/issues/401
 - [x] benchmark throughput of the server
 - [x] user server implementation to create new user
 - [x] figure out how adding a user works (OMAP semantics)
-- [ ] In the omap, make `get_data` and `update_data` have a similar trace.
+- [x] In the omap, make `get_data` and `update_data` have a similar trace.
 - [ ] have a simple client side impl, preferably on pc / cli
 - [ ] Nice documentation for everything
 - [ ] End 2 End encryption

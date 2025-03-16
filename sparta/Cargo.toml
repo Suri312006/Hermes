@@ -33,6 +33,7 @@ itertools = "0.14.0"
 clap = { version = "4.5.32", features = ["derive"] }
 
 agora = {path = "../agora"}
+lazy_static = "1.5.0"
 
 
 [build-dependencies]

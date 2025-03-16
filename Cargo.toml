@@ -7,6 +7,4 @@ members = [ "agora",
   "documents/charts"
 ]
 
-# use for edition 2024
-resolver = "3"
-# resolver = "1"
+resolver = "1"

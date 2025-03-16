@@ -10,9 +10,10 @@ mod client;
 mod grpc {
     tonic::include_proto!("hermes");
 }
+use agora::SPARTA_PORT;
 use clap::Parser;
-use color_eyre::eyre::{eyre, Result};
-use grpc::{user_service_client::UserServiceClient, FetchReq, NewUserReq, Packet};
+use color_eyre::eyre::{Result, eyre};
+use grpc::{FetchReq, NewUserReq, Packet, user_service_client::UserServiceClient};
 use tonic::IntoRequest;
 
 #[derive(Parser, Debug)]
@@ -27,11 +28,12 @@ struct Args {
     recipient_id: u32,
 }
 
-static SERVER_URL: &str = "http://[::1]:50051";
-
 #[tokio::main]
 async fn main() -> Result<()> {
     color_eyre::install()?;
+
+    let server_url = format!("http://{}", SPARTA_PORT);
+
     let args = Args::parse();
 
     let msg = args.message.into_bytes();
@@ -40,9 +42,9 @@ async fn main() -> Result<()> {
         return Err(eyre!("Message too long!"));
     }
 
-    let mut user_client = UserServiceClient::connect(SERVER_URL).await?;
+    let mut user_client = UserServiceClient::connect(server_url.clone()).await?;
 
-    let mut msg_client = grpc::message_service_client::MessageServiceClient::connect(SERVER_URL)
+    let mut msg_client = grpc::message_service_client::MessageServiceClient::connect(server_url)
         .await
         .unwrap();
 

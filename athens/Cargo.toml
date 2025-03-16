@@ -12,6 +12,21 @@ tokio-stream = "0.1"
 async-stream = "0.2"
 clap = { version = "4.5.31", features = ["derive"] }
 color-eyre = "0.6.3"
+agora = {path = "../agora"}
+lazy_static = "1.5.0"
+serde = { version = "1.0.208", features = ["derive"] }
+directories = "5.0.1"
+config = "0.14.0"
+toml = "0.8.20"
+
+
+[[bin]]
+name = "proxy"
+path = "src/bin/proxy/main.rs"
+
+[[bin]]
+name = "cli"
+path = "src/bin/cli/main.rs"
 
 [build-dependencies]
 tonic-build = "0.12"
