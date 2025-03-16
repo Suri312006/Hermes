@@ -6,15 +6,17 @@
 // - happened in groovy
 //
 
-use std::{
-    sync::{Arc, Mutex},
-    time::Duration,
-};
+use std::{collections::VecDeque, sync::Arc, time::Duration};
 
 use athens::{client::SpartaClient, config::Config, grpc::FetchReq};
 use clap::Parser;
 use color_eyre::eyre::{Context, Result, eyre};
-use tokio::{spawn, task::JoinHandle, time::sleep};
+use log::info;
+use server::Proxy;
+use tokio::{join, select, spawn, sync::Mutex, task::JoinHandle, time::sleep};
+
+mod server;
+mod service;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -72,7 +74,8 @@ async fn main() -> Result<()> {
     let mut client = SpartaClient::default().await?;
     let config = Config::read()?;
 
-    let real_msgs = Arc::new(Mutex::new(Vec::new()));
+    let msgs_queue = Arc::new(Mutex::new(VecDeque::new()));
+    let closure_queue = msgs_queue.clone();
 
     // spawn a task that keeps pulling from sparta on a regular interval
     let handle: JoinHandle<Result<()>> = spawn(async move {
@@ -88,13 +91,10 @@ async fn main() -> Result<()> {
                 .inner
                 .first()
             {
+                info!("pulling!");
                 //NOTE: this only works if adversary cannot observe the plaintext of the communication link between the enclave and the recipient
                 if msg.recipient == config.user_id {
-                    real_msgs
-                        .lock()
-                        .map_err(|e| eyre!("{:?}", e))
-                        .with_context(|| "Please re-run the proxy!")?
-                        .push(msg.clone());
+                    closure_queue.lock().await.push_back(msg.clone());
                 }
             }
 
@@ -102,7 +102,18 @@ async fn main() -> Result<()> {
         }
     });
 
-    handle.await??;
+    let server = Proxy::new(msgs_queue).await?;
 
-    Ok(())
+    let resp = select! {
+
+        val = server.run() => {
+            val
+        }
+
+        val2 = handle => {
+            val2?
+        }
+
+    };
+    resp
 }

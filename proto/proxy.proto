@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+import "message.proto";
+
+package hermes;
+
+// will fetch for all availible
+message ProxyFetchReq {}
+
+service ProxyService{
+  rpc Send(Packet) returns (Ack);
+  rpc Fetch(ProxyFetchReq) returns (PacketList);
+}

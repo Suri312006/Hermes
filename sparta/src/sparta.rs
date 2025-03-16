@@ -4,17 +4,15 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use color_eyre::eyre::{eyre, Result};
+use agora::Log;
+use color_eyre::eyre::{Result, eyre};
 use log::info;
-use tonic::transport::{server::Router, Server};
+use tonic::transport::{Server, server::Router};
 
 use crate::{
-    grpc::message_service_server::MessageServiceServer,
-    messagestore::MessageStoreInner,
-    services::MessageServer,
-    user_service_server::UserServiceServer,
-    userstore::UserStoreInner,
-    Log, UserServer,
+    UserServer, grpc::message_service_server::MessageServiceServer,
+    messagestore::MessageStoreInner, services::MessageServer,
+    user_service_server::UserServiceServer, userstore::UserStoreInner,
 };
 
 pub struct Sparta {

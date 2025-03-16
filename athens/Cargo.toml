@@ -19,6 +19,7 @@ directories = "5.0.1"
 config = "0.14.0"
 toml = "0.8.20"
 
+log = "0.4.22"
 
 [[bin]]
 name = "proxy"

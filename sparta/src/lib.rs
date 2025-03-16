@@ -1,4 +1,3 @@
-mod log;
 mod sparta;
 mod grpc {
     tonic::include_proto!("hermes");
