@@ -16,6 +16,7 @@ pub struct Config {
 }
 
 const CONFIG_FILE_NAME: &str = "config.toml";
+const MSG_FILE_NAME: &str = "msgs.toml";
 
 lazy_static! {
     pub static ref PROJECT_NAME: String = env!("CARGO_CRATE_NAME").to_uppercase().to_string();
@@ -45,7 +46,7 @@ impl Config {
             .with_context(|| {
                 format!(
                     "Error occurred when writing to configuration file: {:?}.",
-                    config_dir.join("config.toml")
+                    config_dir.join(CONFIG_FILE_NAME)
                 )
             })?;
         let config = Config { user_id };
@@ -83,6 +84,10 @@ pub fn get_data_dir() -> PathBuf {
     } else {
         PathBuf::from(".").join(".config")
     }
+}
+
+pub fn get_outfile() -> PathBuf {
+    get_data_dir().join(MSG_FILE_NAME)
 }
 
 fn project_directory() -> Option<ProjectDirs> {

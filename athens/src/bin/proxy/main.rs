@@ -6,15 +6,15 @@
 // - happened in groovy
 //
 
-use std::time::Duration;
-
-use athens::{
-    client::SpartaClient,
-    grpc::{FetchReq, NewUserReq, Packet, user_service_client::UserServiceClient},
+use std::{
+    sync::{Arc, Mutex},
+    time::Duration,
 };
+
+use athens::{client::SpartaClient, config::Config, grpc::FetchReq};
 use clap::Parser;
-use color_eyre::eyre::{Result, eyre};
-use tokio::time::sleep;
+use color_eyre::eyre::{Context, Result, eyre};
+use tokio::{spawn, task::JoinHandle, time::sleep};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -22,15 +22,16 @@ struct Args {
     #[arg(short, long)]
     granularity: TimeGranularity,
 
-    #[arg(short, long)]
+    #[arg(short, long, default_value_t = 30)]
     messages_per_time_step: u64,
 }
 
-#[derive(Clone, Copy, Debug, clap::ValueEnum)]
+#[derive(Clone, Copy, Debug, clap::ValueEnum, Default)]
 enum TimeGranularity {
     Week,
     Day,
     Hour,
+    #[default]
     Minute,
     Second,
 }
@@ -69,15 +70,39 @@ async fn main() -> Result<()> {
 
     // now we set up a worker thread that fetches for delay
     let mut client = SpartaClient::default().await?;
+    let config = Config::read()?;
 
-    loop {
-        client
-            .msg_client
-            .fetch(FetchReq {
-                recipient: "0000".to_string(),
-                amount: 1,
-            })
-            .await?;
-        sleep(delay_time).await;
-    }
+    let real_msgs = Arc::new(Mutex::new(Vec::new()));
+
+    // spawn a task that keeps pulling from sparta on a regular interval
+    let handle: JoinHandle<Result<()>> = spawn(async move {
+        loop {
+            if let Some(msg) = client
+                .msg_client
+                .fetch(FetchReq {
+                    recipient: config.user_id.clone(),
+                    amount: 1,
+                })
+                .await?
+                .into_inner()
+                .inner
+                .first()
+            {
+                //NOTE: this only works if adversary cannot observe the plaintext of the communication link between the enclave and the recipient
+                if msg.recipient == config.user_id {
+                    real_msgs
+                        .lock()
+                        .map_err(|e| eyre!("{:?}", e))
+                        .with_context(|| "Please re-run the proxy!")?
+                        .push(msg.clone());
+                }
+            }
+
+            sleep(delay_time).await;
+        }
+    });
+
+    handle.await??;
+
+    Ok(())
 }

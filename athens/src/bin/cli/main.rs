@@ -38,8 +38,15 @@ async fn main() -> Result<()> {
 
             println!("{}", "Initialization Successfull!".green())
         }
-        Commands::Message(args) => {}
-        Commands::Contacts(args) => {}
+        Commands::Message(args) => {
+
+            
+            
+            // send message stuff
+        }
+        Commands::Contacts(args) => {
+            // add contacts
+        }
     }
 
     // let msg = args.message.into_bytes();
