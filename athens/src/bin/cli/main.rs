@@ -5,7 +5,7 @@ use args::{CliArgs, Commands, MessageSubCommands};
 use athens::{
     config::Config,
     grpc::{
-        FetchReq, NewUserReq, Packet, message_service_client::MessageServiceClient,
+        FetchReq, NewUserReq, Packet, ProxyFetchReq, message_service_client::MessageServiceClient,
         proxy_service_client::ProxyServiceClient, user_service_client::UserServiceClient,
         user_service_server,
     },
@@ -58,7 +58,6 @@ async fn main() -> Result<()> {
                         ));
                     }
                     //TODO: okay we need to chunk this guy up.
-
                     proxy_client
                         .send(Packet {
                             recipient,
@@ -66,12 +65,22 @@ async fn main() -> Result<()> {
                         })
                         .await?;
                 }
-                MessageSubCommands::Fetch => {}
+                MessageSubCommands::Fetch => {
+                    let msgs = proxy_client.fetch(ProxyFetchReq {}).await?.into_inner();
+                    for msg in msgs.inner {
+                        println!(
+                            "From: {:?}\nBody: {:?}",
+                            msg.recipient,
+                            String::from_utf8(msg.body)
+                        );
+                    }
+                }
             }
             // send message stuff
         }
         Commands::Contacts(args) => {
             // add contacts
+            todo!("Implement contacts");
         }
     }
 

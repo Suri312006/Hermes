@@ -16,6 +16,8 @@ mod grpc {
     tonic::include_proto!("hermes");
 }
 
+const WAIT_TIME: u64 = 8;
+
 async fn fetch_k(mut msg_client: MessageServiceClient<Channel>, user_id: String, k: i32) {
     let resp = msg_client
         .fetch(FetchReq {
@@ -48,7 +50,7 @@ fn fetch_benches(c: &mut Criterion) {
         .expect("Sparta failed to start!");
 
     // wait for sparta to be up and availible
-    sleep(Duration::from_secs(8));
+    sleep(Duration::from_secs(WAIT_TIME));
 
     runtime.block_on(async {
         let server_url = format!("http://{}", SPARTA_PORT);
@@ -111,7 +113,7 @@ fn send_benches(c: &mut Criterion) {
         .expect("Sparta failed to start!");
 
     // wait for sparta to be up and availible
-    sleep(Duration::from_secs(8));
+    sleep(Duration::from_secs(WAIT_TIME));
 
     runtime.block_on(async {
         let server_url = format!("http://{}", SPARTA_PORT);
@@ -168,7 +170,7 @@ fn user_benches(c: &mut Criterion) {
         .expect("Sparta failed to start!");
 
     // wait for sparta to be up and availible
-    sleep(Duration::from_secs(8));
+    sleep(Duration::from_secs(WAIT_TIME));
 
     let runtime = Builder::new_current_thread().enable_all().build().unwrap();
 

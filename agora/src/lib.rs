@@ -1,5 +1,5 @@
 /// Upper Limit for the amount of messages sparta can store.
-pub const MSG_DB_SIZE: u64 = 2_u64.pow(20);
+pub const MSG_DB_SIZE: u64 = 2_u64.pow(14);
 
 /// Upper Limit for the amount of users sparta can store.
 pub const USER_DB_SIZE: u64 = 2_u64.pow(6);

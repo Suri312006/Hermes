@@ -4,13 +4,115 @@ use charming::{
     element::{AxisType, Tooltip, Trigger},
     series::Line,
 };
-
+// msg_db_size = 2^14
+// k = 1 : 3.3058 ms
+// k = 10 : 4.3576 ms
+// k = 100 : 13.774 ms
+// k = 1000 : 113.19 ms
+//
+// send
+// k = 1 : 3.4311 ms
+//
+// user
+// creation : 1.6232 ms
+//
+//
+//
+// msg_db_size = 2^15
+// k = 1 : 3.4443 ms
+// k = 10 : 4.8045 ms
+// k = 100 : 18.146 ms
+// k = 1000 : 156.89 ms
+//
+// send
+// k = 1 : 3.4597 ms
+//
+// user
+// creation : 1.6329 ms
+//
+//
+//
+// msg_db_size = 2^16
+// k = 1 : 3.5589 ms
+// k = 10 : 5.8209 ms
+// k = 100 : 27.658 ms
+// k = 1000 : 238.70 ms
+//
+// send
+// k = 1 : 3.3683 ms
+//
+// user
+// creation : 1.6218 ms
+//
+//
+//
+// msg_db_size = 2^17
+// k = 1 : 3.6178 ms
+// k = 10 : 7.1238 ms
+// k = 100 : 43.315 ms
+// k = 1000 : 410.60 ms
+//
+// send
+// k = 1 : 3.8439 ms
+//
+// user
+// creation : 1.6324 ms
+//
+//
+// msg_db_size = 2^18
+// k = 1 : 3.9646 ms
+// k = 10 : 11.236 ms
+// k = 100 : 76.380 ms
+// k = 1000 : 685.32
+//
+// send
+// k = 1 : 3.9955 ms
+//
+// user
+// creation : 1.68 ms
+//
+//
+// msg_db_size = 2^19
+// k = 1 : 4.68 ms
+// k = 10 : 16.968 ms
+// k = 100 : 134.09 ms
+// k = 1000 : 1.308 ms
+//
+// send
+// k = 1 : 4.4964 ms
+//
+// user
+// creation : 1.6715
+//
+//
 // msg_db_size = 2^20
 // fetch
-// k = 1 : 4.614 ms
-// k = 10 : 31.2ms
-// k = 100 : 276.38ms
-// k = 1000 : 3.02s
+// k = 1 : 5.7658 ms
+// k = 10 : 28.566 ms
+// k = 100 : 263.36 ms
+// k = 1000 : 2.4938 s
+//
+// send
+// k = 1 : 5.9114 ms
+//
+// user
+// creation : 1.69 ms
+//
+//
+// msg_db_size = 2^21
+// k = 1 : 8.9086 ms
+// k = 10 : 55.251 ms
+// k = 100 : 551.94 ms
+// k = 1000 : 5.6199 s
+//
+// send
+// k = 1 : 9.056 ms
+//
+// user
+// creation : 1.72 ms
+//
+//
+
 pub fn chart() -> Chart {
     Chart::new()
         .title(Title::new().text("Stacked Line"))
