@@ -7,7 +7,15 @@ package hermes;
 // will fetch for all availible
 message ProxyFetchReq {}
 
+message RegisterUser{}
+
 service ProxyService{
   rpc Send(Packet) returns (Ack);
   rpc Fetch(ProxyFetchReq) returns (PacketList);
 }
+
+service ProxyUserService{
+  
+}
+
+

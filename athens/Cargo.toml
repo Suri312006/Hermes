@@ -20,6 +20,7 @@ config = "0.14.0"
 toml = "0.8.20"
 
 log = "0.4.22"
+ed25519-dalek = "2.1.1"
 
 [[bin]]
 name = "proxy"

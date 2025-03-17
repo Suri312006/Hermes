@@ -4,70 +4,92 @@
 
 #show: metropolis.setup
 
+#show link:underline;
+
+// Problem Defenition
+// Threat Model
+// Your Approach
+// Implementation
+// Experiments / Results
+
 #slide[
   #set page(header: none, footer: none, margin: 3em)
 
  
   #text(size: 1.3em)[
-    *My presentation title*
+    *Hermes*
   ]
 
-  My subtitle
+   A practical SPARTA-LL Implementation
 
   #metropolis.divider
   
   #set text(size: .8em, weight: "light")
-  The Author
+  Surendra Jammishetti
 
-  Jan 16, 2025
+  Mar 16, 2025
 
-  Some extra info
+  CSE 108C
+
 ]
 
 #slide[
-  = Agenda
+  = Problem Defenition
 
-  #metropolis.outline
+  - Current anonymous messaging systems aren't resilient to traffic analysis attacks.
+
+  - SPARTA lays a framework for a fast, traffic analysis resistant solution.
+
+  - Common pitfalls, such as user validation, that can starve user messages.
+
+  // are we sure we wanna keep this in.
+  - Lacks details for multi-device communication.
 ]
 
-#new-section[My first section]
 
 #slide[
-  = The Fundamental Theorem of Calculus
+  = Threat Model and Security Guarantees
 
-  // For $f = (dif F) / (dif x)$ we _know_ that
-  // $
-  //   integral_a^b f(x) dif x = F(b) - F(a)
-  // $
+  == Adversary
+  - Inheriting SPARTA's threat model of a *global active attacker* who can
+    - control / modify all network links
+    - participate in the protocl
+    - observe traffic for an arbitrary amount of time
+    - can breach everything on the server excluding the enclave code
 
-  See `https://en.wikipedia.org/wiki/Fundamental_theorem_of_calculus`
-
-  #image("lets_go.png")
-]
-
-#slide[
-  slide without a title
-]
-
-#new-section[My second section]
-
-#slide[
-  = Heron algorithm
-
-  ```julia
-  function heron(x)
-      r = x
-      while abs(r^2 - x) > eps()
-          r = (r + x / r) / 2
-      end
-      return r
-  end
-
-  @test heron(42) ≈ sqrt(42)
-  ```
+  == Differential Privacy
+  - Guarantee that adversary cannot corrolate that one user is messaging another.
+    - The base SPARTA-LL construction already acheives this.
 ]
 
 #slide[
-  #show: focus
-  Something very important
+  = My Approach
+
+  #image("arch.jpg")
+
+]
+
+#slide[
+  = Implementation Details
+
+  - No enclave (lack of hardware)
+
+  - 2.3k lines of rust
+
+  - GRPC as messaging protocol
+
+  - #link("https://github.com/facebook/oram")[Facebook ORAM Implementation]
+
+  - O(N log(N)) Implementation for UserStore OMAP
+
+  - ed25519 Signatures to determine Fetch authenticity
+
+  - Proxy has queue per device to hold older messages
+]
+
+#slide[
+  = Results
+  #align(center)[#image("fetch.png")]
+
+
 ]

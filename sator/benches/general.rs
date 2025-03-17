@@ -23,6 +23,7 @@ async fn fetch_k(mut msg_client: MessageServiceClient<Channel>, user_id: String,
         .fetch(FetchReq {
             recipient: user_id,
             amount: k,
+            sig: String::new(),
         })
         .await
         .unwrap();

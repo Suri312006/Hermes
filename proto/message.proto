@@ -7,14 +7,15 @@ message Packet {
   bytes body = 2;
 }
 
-// WARN: do we want to have an ack back after sending a message?
-// why would we need an ack?
 message Ack {
 }
 
 message FetchReq{
   string recipient = 1;
   int32  amount = 2;
+  string sig = 3;
+
+  
 }
 
 message PacketList {
