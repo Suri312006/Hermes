@@ -35,12 +35,14 @@
 #slide[
   = The Fundamental Theorem of Calculus
 
-  For $f = (dif F) / (dif x)$ we _know_ that
-  $
-    integral_a^b f(x) dif x = F(b) - F(a)
-  $
+  // For $f = (dif F) / (dif x)$ we _know_ that
+  // $
+  //   integral_a^b f(x) dif x = F(b) - F(a)
+  // $
 
   See `https://en.wikipedia.org/wiki/Fundamental_theorem_of_calculus`
+
+  #image("lets_go.png")
 ]
 
 #slide[

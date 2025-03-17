@@ -5,10 +5,10 @@ use charming::{ImageFormat, ImageRenderer, theme::Theme};
 mod fetch;
 
 fn main() {
-    let theme = Theme::Westeros;
+    let theme = Theme::Dark;
     let chart = fetch::chart();
 
-    let mut renderer = ImageRenderer::new(1000, 800).theme(theme);
+    let mut renderer = ImageRenderer::new(1200, 800).theme(theme);
 
     let mut path = fs::canonicalize(PathBuf::from_str("../").unwrap()).unwrap();
     // .unwrap()

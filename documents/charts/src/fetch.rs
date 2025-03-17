@@ -1,7 +1,7 @@
 use charming::{
     Chart,
-    component::{Axis, Feature, Grid, Legend, SaveAsImage, Title, Toolbox},
-    element::{AxisType, Tooltip, Trigger},
+    component::{Axis, Feature, Grid, Legend, LegendItem, SaveAsImage, Title, Toolbox},
+    element::{AxisType, NameLocation, Tooltip, Trigger},
     series::Line,
 };
 // msg_db_size = 2^14
@@ -112,69 +112,128 @@ use charming::{
 // creation : 1.72 ms
 //
 //
+const TEN: &str = "k = 10";
 
 pub fn chart() -> Chart {
     Chart::new()
-        .title(Title::new().text("Stacked Line"))
+        .title(Title::new().text("Fetch"))
         .tooltip(Tooltip::new().trigger(Trigger::Axis))
         .legend(Legend::new().data(vec![
-            "Email",
-            "Union Ads",
-            "Video Ads",
-            "Direct",
-            "Search Engine",
-            "Affiliate Marketing",
+            LegendItem::from("k = 1"),
+            LegendItem::from(TEN),
+            LegendItem::from("k = 100"),
+            LegendItem::from("k = 1000"),
+            LegendItem::from("From Paper"), // "k = 10",
+                                            // "k = 100",
+                                            // "k = 1000",
         ]))
         .grid(
             Grid::new()
-                .top("10%")
-                .left("10%")
-                .right("4%")
-                .bottom("10%")
+                .left("51%")
+                .right("2%")
+                .bottom("5%")
+                .contain_label(true),
+        )
+        .grid(
+            Grid::new()
+                .left("2%")
+                .right("51%")
+                .bottom("5%")
                 .contain_label(true),
         )
         .toolbox(Toolbox::new().feature(Feature::new().save_as_image(SaveAsImage::new())))
         .x_axis(
             Axis::new()
                 .type_(AxisType::Category)
+                .name("Message DB size")
+                .name_location(NameLocation::Center)
+                .grid_index(0)
+                .name_gap(30)
                 .boundary_gap(false)
-                .data(vec!["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]),
+                .data(vec![
+                    "2^14", "2 ^ 15", "2 ^ 16", "2 ^ 17", "2 ^ 18", "2 ^ 19", "2 ^ 20", "2 ^ 21",
+                ]),
         )
-        .y_axis(Axis::new().type_(AxisType::Value))
-        .series(
-            Line::new()
-                .name("Email")
-                .stack("Total")
-                .data(vec![120, 132, 101, 134, 90, 230, 210]),
+        .x_axis(
+            Axis::new()
+                .type_(AxisType::Category)
+                .name("Message DB size")
+                .grid_index(1)
+                .name_location(NameLocation::Center)
+                .name_gap(30)
+                .boundary_gap(false)
+                .data(vec![
+                    "2^14", "2 ^ 15", "2 ^ 16", "2 ^ 17", "2 ^ 18", "2 ^ 19", "2 ^ 20", "2 ^ 21",
+                ]),
         )
-        .series(
-            Line::new()
-                .name("Union Ads")
-                .stack("Total")
-                .data(vec![220, 182, 191, 234, 290, 330, 310]),
+        .y_axis(
+            Axis::new()
+                .type_(AxisType::Value)
+                .name("Time in ms")
+                .grid_index(0),
         )
-        .series(
-            Line::new()
-                .name("Video Ads")
-                .stack("Total")
-                .data(vec![150, 232, 201, 154, 190, 330, 410]),
-        )
-        .series(
-            Line::new()
-                .name("Direct")
-                .stack("Total")
-                .data(vec![320, 332, 301, 334, 390, 330, 320]),
-        )
-        .series(
-            Line::new()
-                .name("Search Engine")
-                .stack("Total")
-                .data(vec![820, 932, 901, 934, 1290, 1330, 1320]),
+        .y_axis(
+            Axis::new()
+                .type_(AxisType::Value)
+                .name("Time in ms")
+                .grid_index(1),
         )
         .series(
             Line::new()
-                .name("Affiliate Marketing")
-                .stack("Total")
-                .data(vec![180, 232, 210, 290, 250, 400, 370]),
+                .name("k = 1")
+                .data(vec![
+                    3.3058, 3.4443, 3.5589, 3.6178, 3.9646, 4.68, 5.7658, 8.9086,
+                ])
+                .x_axis_index(1)
+                .y_axis_index(1),
         )
+        .series(
+            Line::new()
+                .name("k = 10")
+                .data(vec![
+                    4.3576, 4.8045, 5.8209, 7.1238, 11.236, 26.968, 28.566, 55.251,
+                ])
+                .x_axis_index(1)
+                .y_axis_index(1),
+        )
+        .series(
+            Line::new()
+                .name("k = 100")
+                .data(vec![
+                    13.774, 18.146, 27.658, 43.315, 76.380, 134.09, 263.36, 551.94,
+                ])
+                .x_axis_index(0)
+                .y_axis_index(0),
+        )
+        .series(
+            Line::new()
+                .name("k = 1000")
+                .data(vec![
+                    113.19, 156.89, 238.7, 410.6, 685.2, 1308.0, 2493.8, 5619.9,
+                ])
+                .x_axis_index(0)
+                .y_axis_index(0),
+        )
+        .series(
+            Line::new()
+                .name("From Paper")
+                .data(vec![0.0, 0.0, 0.0, 0.0, 0., 0., 1.1, 0.0])
+                .x_axis_index(1)
+                .y_axis_index(1),
+        )
+    // .series(
+    //     Line::new()
+    //         .name("Direct")
+    //         .data(vec![320, 332, 301, 334, 390, 330, 320]),
+    // )
+    // .series(
+    //     Line::new()
+    //         .name("Search Engine")
+    //         .data(vec![820, 932, 901, 934, 1290, 1330, 1320]),
+    // )
+    // .series(
+    //     Line::new()
+    //         .name("Affiliate Marketing")
+    //         .data(vec![180, 232, 210, 290, 250, 400, 370]),
+    // )
 }
