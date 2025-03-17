@@ -14,18 +14,25 @@ pub enum Commands {
     /// a regular interval with Sparta.
     Init {},
 
-    Message(MessageArgs),
+    #[command(subcommand)]
+    Message(MessageSubCommands),
 
     Contacts(ContactsArgs),
 }
 
-#[derive(Debug, Args)]
-pub struct MessageArgs {
-    #[arg(short, long)]
-    pub message: String,
+#[derive(Subcommand, Debug)]
+pub enum MessageSubCommands {
+    Send {
+        #[arg(short, long)]
+        message: String,
 
-    #[arg(short, long)]
-    pub path: Option<String>,
+        #[arg(short, long)]
+        recipient: String,
+
+        #[arg(short, long)]
+        path: Option<String>,
+    },
+    Fetch,
 }
 
 #[derive(Debug, Args)]

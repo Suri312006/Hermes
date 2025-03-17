@@ -1,12 +1,13 @@
 use std::process::Command;
 
-use agora::SPARTA_PORT;
-use args::{CliArgs, Commands};
+use agora::{MSG_SIZE, PROXY_PORT, SPARTA_PORT};
+use args::{CliArgs, Commands, MessageSubCommands};
 use athens::{
     config::Config,
     grpc::{
         FetchReq, NewUserReq, Packet, message_service_client::MessageServiceClient,
-        user_service_client::UserServiceClient, user_service_server,
+        proxy_service_client::ProxyServiceClient, user_service_client::UserServiceClient,
+        user_service_server,
     },
 };
 use clap::Parser;
@@ -23,7 +24,11 @@ async fn main() -> Result<()> {
 
     let server_url = format!("http://{}", SPARTA_PORT);
 
+    let proxy_url = format!("http://{}", PROXY_PORT);
+
     let args = CliArgs::parse();
+
+    let mut proxy_client = ProxyServiceClient::connect(proxy_url).await?;
 
     match args.command {
         Commands::Init {} => {
@@ -38,10 +43,31 @@ async fn main() -> Result<()> {
 
             println!("{}", "Initialization Successfull!".green())
         }
-        Commands::Message(args) => {
 
-            
-            
+        Commands::Message(subcommand) => {
+            match subcommand {
+                MessageSubCommands::Send {
+                    message,
+                    recipient,
+                    path: _path,
+                } => {
+                    if message.len() > MSG_SIZE {
+                        return Err(eyre!(
+                            "Message Too Large! Message must be under {:?} bytes",
+                            MSG_SIZE
+                        ));
+                    }
+                    //TODO: okay we need to chunk this guy up.
+
+                    proxy_client
+                        .send(Packet {
+                            recipient,
+                            body: message.as_bytes().to_vec(),
+                        })
+                        .await?;
+                }
+                MessageSubCommands::Fetch => {}
+            }
             // send message stuff
         }
         Commands::Contacts(args) => {
@@ -49,59 +75,6 @@ async fn main() -> Result<()> {
         }
     }
 
-    // let msg = args.message.into_bytes();
-
-    // if msg.len() > 100 {
-    //     return Err(eyre!("Message too long!"));
-    // }
-
-    // let mut user_client = UserServiceClient::connect(server_url.clone()).await?;
-
-    // let mut msg_client = MessageServiceClient::connect(server_url).await.unwrap();
-
-    // // need to  pad message into 100 bytes array
-    // let mut msg_buf = [0; 232];
-
-    // msg_buf[0..msg.len()].copy_from_slice(msg.as_slice());
-
-    // //NOTE: ideally we would now encrypt this buffer to send to the server,
-    // //with some sort of key thing we exchanged with the person we want to
-    // //communicate with
-
-    // println!("{:#?}", msg_buf);
-
-    // let i = user_client
-    //     .create_user(NewUserReq {}.into_request())
-    //     .await?
-    //     .into_inner()
-    //     .id;
-
-    // println!("got id!: {}", id);
-
-    // msg_client
-    //     .send(Packet {
-    //         recipient: id.clone(),
-    //         body: msg_buf.to_vec(),
-    //     })
-    //     .await?;
-
-    // let msgs = msg_client
-    //     .fetch(FetchReq {
-    //         recipient: id,
-    //         amount: 2,
-    //     })
-    //     .await?
-    //     .into_inner();
-
-    // for msg in msgs.inner {
-    //     println!(
-    //         "recipient: {:#?}, message: {:#?}",
-    //         msg.recipient,
-    //         String::from_utf8(msg.body)
-    //     );
-    // }
-
-    // Ok(())
     Ok(())
     // we need a grpc client
 }
