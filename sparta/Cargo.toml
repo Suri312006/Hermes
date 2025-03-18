@@ -35,6 +35,7 @@ clap = { version = "4.5.32", features = ["derive"] }
 
 agora = {path = "../agora"}
 lazy_static = "1.5.0"
+tokio-vsock = { version = "0.7.0", features = ["tonic012"] }
 
 
 [build-dependencies]

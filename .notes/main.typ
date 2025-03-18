@@ -46,7 +46,33 @@ https://github.com/fortanix/rust-sgx/issues/401
 - [ ] figure out how to get this building on fortranix sgx
 	- If I dont reach this, could sell this as not feasable in such a short amount of time but looking forward to do it in the future.
 	]
+= EC2 INSTRUCTIONS
 
++ launch ec2 instance
+	```
+	aws ec2 run-instances \
+--image-id ami-04acda42f3629e02b \
+--count 1 \
+--instance-type m5.xlarge \
+--key-name 'hello_world keypair' \
+--enclave-options 'Enabled=true' \
+--block-device-mappings 'DeviceName=/dev/sda1,Ebs={VolumeSize=64,VolumeType=gp3}'	```
+
++ add ssh security group
+ TODO: describe how to do this later
++ ssh onto ec2 instance
+
++ `sudo yum install git -y`
+
++` yum install make glibc-devel gcc patch`
+
++` sudo amazon-linux-extras install aws-nitro-enclaves-cli -y`
+
+https://docs.aws.amazon.com/enclaves/latest/user/nitro-enclave-cli-install.html
+
+
+
+- install the nitro cli
 = Project Structure
 
 Hermes
