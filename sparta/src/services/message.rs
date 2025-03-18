@@ -1,4 +1,6 @@
+use bincode::config::standard;
 use color_eyre::eyre::Result;
+use ed25519_dalek::{Signature, Verifier, VerifyingKey, pkcs8};
 use log::{debug, error, trace, warn};
 use oram::Address;
 use std::sync::Arc;
@@ -13,6 +15,7 @@ use crate::{
         messagestore::{MESSAGE_SIZE, MessageNode, MessageStore, Recipient},
         userstore::{UserData, UserStore},
     },
+    userstore::PUB_KEY_SIZE,
 };
 
 pub struct MessageServer {
@@ -85,6 +88,7 @@ impl MessageService for MessageServer {
                     UserData {
                         head: rand_address(),
                         tail: rand_address(),
+                        pub_key: [0_u8; PUB_KEY_SIZE],
                     },
                     false,
                 )
@@ -98,7 +102,11 @@ impl MessageService for MessageServer {
                 })?;
 
             user_store
-                .update_data(recipient, UserData::new(prev_data.head, nexttail), true)
+                .update_data(
+                    recipient,
+                    UserData::new(prev_data.head, nexttail, prev_data.pub_key),
+                    true,
+                )
                 .map_err(|e| {
                     error!("{e}");
                     Status::internal("Internal Server Error.")
@@ -159,7 +167,7 @@ impl MessageService for MessageServer {
         return M
         */
         let start = Instant::now();
-        let req = req.into_inner();
+        let req: FetchReq = req.into_inner();
 
         let recipient: Recipient = req.recipient.parse().map_err(|_| {
             error!("unable to parse recipient");
@@ -181,6 +189,7 @@ impl MessageService for MessageServer {
                     UserData {
                         head: rand_address(),
                         tail: rand_address(),
+                        pub_key: [0_u8; PUB_KEY_SIZE],
                     },
                     false,
                 )
@@ -190,6 +199,26 @@ impl MessageService for MessageServer {
                 })?
                 .ok_or_else(|| Status::not_found("Recipient not found."))?;
 
+            let (verifying_key, _): (VerifyingKey, usize) =
+                bincode::serde::decode_from_slice(&user_data.pub_key, standard())
+                    .map_err(|_| Status::internal("something went wrong"))?;
+
+            let mut sig_buf = [0_u8; 64];
+            if req.sig.as_bytes().len() != 64 {
+                return Err(Status::invalid_argument("Bad Signature"));
+            }
+            sig_buf.copy_from_slice(req.sig.as_bytes());
+
+            let sig = Signature::from_bytes(&sig_buf);
+
+            verifying_key
+                .verify(&recipient.to_le_bytes(), &sig)
+                .map_err(|_e| Status::invalid_argument("Invalid Signature"))?;
+
+            // info!("public_key: \n{x}");
+
+            // ok we validate pub_key
+
             // write back the tail, should return old ver
             user_store
                 .update_data(
@@ -197,6 +226,7 @@ impl MessageService for MessageServer {
                     UserData {
                         head: user_data.tail,
                         tail: user_data.tail,
+                        pub_key: user_data.pub_key,
                     },
                     true,
                 )
@@ -207,6 +237,7 @@ impl MessageService for MessageServer {
                 .ok_or_else(|| Status::not_found("Recipient not found."))?
         };
         let user_end = Instant::now();
+
         trace!("User store part: {:?}", user_end.duration_since(user_start));
 
         debug!("real_user_data: {:#?}", user_data);

@@ -53,7 +53,7 @@
   == Adversary
   - Inheriting SPARTA's threat model of a *global active attacker* who can
     - control / modify all network links
-    - participate in the protocl
+    - participate in the protocol
     - observe traffic for an arbitrary amount of time
     - can breach everything on the server excluding the enclave code
 
@@ -74,7 +74,7 @@
 
   - No enclave (lack of hardware)
 
-  - 2.3k lines of rust
+  - 2.5k lines of rust
 
   - GRPC as messaging protocol
 

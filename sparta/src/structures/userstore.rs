@@ -1,6 +1,7 @@
 use std::sync::{Arc, Mutex};
 
-use color_eyre::eyre::{Context, Result};
+use color_eyre::eyre::{Context, Result, eyre};
+use ed25519_dalek::PUBLIC_KEY_LENGTH;
 use log::debug;
 use oram::{
     Address, BlockSize, BlockValue, Oram, OramError, PathOram,
@@ -15,13 +16,16 @@ use super::messagestore::Recipient;
 const DB_SIZE: Address = agora::USER_DB_SIZE;
 
 //TODO: why the fuck is the block size 32
-const BLOCK_SIZE: BlockSize = 32;
+const BLOCK_SIZE: BlockSize = 64;
+
+pub const PUB_KEY_SIZE: usize = 33;
 
 ///  Head represents the pointer to the users first message / head
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct UserData {
     pub head: u64,
     pub tail: u64,
+    pub pub_key: [u8; 33],
 }
 
 /*
@@ -69,7 +73,7 @@ impl UserStoreInner {
             exists: 1,
         };
 
-        let mut ret: KeyVal = [0_u8; 32].into();
+        let mut ret: KeyVal = [0_u8; BLOCK_SIZE].into();
 
         for addr in 0..DB_SIZE {
             let block_val: KeyVal = self
@@ -112,14 +116,15 @@ impl UserStoreInner {
         }
 
         // we leak whether we found user or not, which is fine
-        if ret == [0_u8; 32].into() {
+        if ret == [0_u8; BLOCK_SIZE].into() {
             return Ok(None);
         }
 
         Ok(Some(ret.user_data))
     }
 
-    pub fn add_user(&mut self, recipient: u64) -> Result<(), OramError> {
+    //TODO: make this a proper error return type
+    pub fn add_user(&mut self, recipient: u64, pub_key: &[u8]) -> Result<()> {
         // okay iterate through each entry
         let mut rng = OsRng;
 
@@ -139,10 +144,22 @@ impl UserStoreInner {
 
         let head = rand_address();
 
+        if pub_key.len() != PUB_KEY_SIZE {
+            return Err(eyre!("invalid pub_key"));
+        }
+
+        let mut pub_key_buf = [0_u8; PUB_KEY_SIZE];
+        pub_key_buf.copy_from_slice(pub_key);
+
         // debug!("created user head address: {:?}", head);
+
         let kv = KeyVal {
             recipient,
-            user_data: UserData { head, tail: head },
+            user_data: UserData {
+                head,
+                tail: head,
+                pub_key: pub_key_buf,
+            },
             exists: 1,
         };
         debug!("written kv: {:?}", kv);
@@ -157,8 +174,12 @@ impl UserStoreInner {
 }
 
 impl UserData {
-    pub fn new(head: u64, tail: u64) -> Self {
-        Self { head, tail }
+    pub fn new(head: u64, tail: u64, pub_key: [u8; PUB_KEY_SIZE]) -> Self {
+        Self {
+            head,
+            tail,
+            pub_key,
+        }
     }
 }
 
@@ -167,6 +188,7 @@ impl UserData {
 struct KeyVal {
     recipient: u64,
     user_data: UserData,
+
     exists: u8,
 }
 
@@ -176,7 +198,10 @@ impl From<KeyVal> for [u8; BLOCK_SIZE] {
         buf[0..8].copy_from_slice(&val.recipient.to_le_bytes());
         buf[8..16].copy_from_slice(&val.user_data.head.to_le_bytes());
         buf[16..24].copy_from_slice(&val.user_data.tail.to_le_bytes());
-        buf[31] = val.exists;
+
+        buf[24..57].copy_from_slice(&val.user_data.pub_key);
+
+        buf[63] = val.exists;
 
         buf
     }
@@ -187,10 +212,18 @@ impl From<[u8; BLOCK_SIZE]> for KeyVal {
         let head: Address = u64::from_le_bytes(value[8..16].try_into().unwrap());
         let tail: Address = u64::from_le_bytes(value[16..24].try_into().unwrap());
 
+        let mut pub_key = [0_u8; PUB_KEY_SIZE];
+
+        pub_key.copy_from_slice(&value[24..57]);
+
         Self {
             recipient: recip,
-            user_data: UserData { head, tail },
-            exists: value[31],
+            user_data: UserData {
+                head,
+                tail,
+                pub_key,
+            },
+            exists: value[63],
         }
     }
 }

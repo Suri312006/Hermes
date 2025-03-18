@@ -25,7 +25,12 @@ https://github.com/fortanix/rust-sgx/issues/401
 - [ ] have a simple client side impl, preferably on pc / cli
 - [ ] Nice documentation for everything
 - [ ] End 2 End encryption
-
+- [ ] Discuss the implementation of the Facebook ORAM library
+- [ ] performance discrepancy possibly due to hardware im running on
+- [ ] apache teaclave http server example with tls
+- [ ] aws nitro enclaves https://dev.to/bendecoste/running-an-http-server-with-aws-nitro-enclaves-elo
+	- https://docs.aws.amazon.com/enclaves/latest/user/getting-started.html
+	- https://github.com/aws/aws-nitro-enclaves-samples/tree/main/vsock_sample/rs
 
 == Post MVP
 - [ ] multi-device support via support of proxy

@@ -37,6 +37,8 @@ impl UserService for UserServer {
 
         let pub_key: Vec<u8> = req.into_inner().public_key;
 
+        info!("len of pub_key: {}", pub_key.len());
+
         let (verifying_key, i): (VerifyingKey, usize) =
             bincode::serde::decode_from_slice(pub_key.as_slice(), standard())
                 .map_err(|_| Status::internal("something went wrong"))?;
@@ -49,11 +51,13 @@ impl UserService for UserServer {
         info!("public_key: \n{x}");
 
         // TODO: need to make sure this isnt a used up spot
-        user_store.add_user(user_id as u64).map_err(|e| {
-            error!("{:?}", e);
+        user_store
+            .add_user(user_id as u64, pub_key.as_slice())
+            .map_err(|e| {
+                error!("{:?}", e);
 
-            Status::new(tonic::Code::Internal, "Internal Error")
-        })?;
+                Status::new(tonic::Code::Internal, "Internal Error")
+            })?;
 
         Ok(Response::new(NewUserRes {
             id: user_id.to_string(),
