@@ -8,7 +8,7 @@ WORKDIR /build
 COPY ./agora /build/agora/
 
 # Then copy your application code
-COPY ./sparta /build/app/
+COPY . /build/app/
 
 # Set working directory to your app
 WORKDIR /build/app
