@@ -5,7 +5,7 @@ FROM rust:1.85 AS builder
 WORKDIR /build
 
 # First, copy and build the agora dependency
-COPY ../agora /build/agora/
+COPY ./agora /build/agora/
 
 # Then copy your application code
 COPY . /build/app/
