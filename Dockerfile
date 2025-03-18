@@ -1,6 +1,10 @@
 # Start with a Rust base image
 FROM rust:1.85 AS builder
 
+
+# Install the musl target
+RUN rustup target add x86_64-unknown-linux-musl
+
 # Set working directory
 WORKDIR /build
 
