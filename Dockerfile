@@ -10,6 +10,7 @@ WORKDIR /build
 
 # First, copy and build the agora dependency
 COPY ./agora /build/agora/
+COPY ./proto /build/proto/
 
 # Then copy your application code
 COPY ./sparta /build/app/
