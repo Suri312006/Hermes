@@ -23,7 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Build for release with dependency caching
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/build/app/target \
-    cargo build --release
+    cargo build --target=x86_64-unknown-linux-musl --release
 
 # Final stage
 FROM debian:bullseye-slim
