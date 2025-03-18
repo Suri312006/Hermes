@@ -25,14 +25,25 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     protobuf-compiler \
     && rm -rf /var/lib/apt/lists/*
 
+
+# Check directory structure and Cargo.toml
+RUN echo "Directory contents:" && ls -la && \
+    echo "Cargo.toml contents:" && cat Cargo.toml
 # Build for release with dependency caching
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/build/app/target \
     cargo build --target=x86_64-unknown-linux-musl --release
 
 # Debug: List the directories to find the binary
-RUN find /build/app/target -type f -executable -name "*" | grep -v "\.d" || echo "No executables found"
-RUN find /build/app/target -type d | sort || echo "No directories found"
+# RUN find /build/app/target -type f -executable -name "*" | grep -v "\.d" || echo "No executables found"
+# RUN find /build/app/target -type d | sort || echo "No directories found"
+
+# After build, check what was created
+RUN echo "Target directory structure:" && \
+    find /build/app/target -type d | sort && \
+    echo "Executable files:" && \
+    find /build/app/target -type f -executable | grep -v "\.d" || \
+    echo "No executables found"
 
 # Final stage
 FROM debian:bullseye-slim
