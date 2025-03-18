@@ -30,6 +30,10 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/build/app/target \
     cargo build --target=x86_64-unknown-linux-musl --release
 
+# Debug: List the directories to find the binary
+RUN find /build/app/target -type f -executable -name "*" | grep -v "\.d" || echo "No executables found"
+RUN find /build/app/target -type d | sort || echo "No directories found"
+
 # Final stage
 FROM debian:bullseye-slim
 
