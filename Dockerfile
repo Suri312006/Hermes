@@ -8,7 +8,7 @@ WORKDIR /build
 COPY ./agora /build/agora/
 
 # Then copy your application code
-COPY . /build/app/
+COPY ./sparta /build/app/
 
 # Set working directory to your app
 WORKDIR /build/app
@@ -23,7 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Build for release with dependency caching
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/build/app/target \
-    cargo build --release
+    cargo build --target=x86_64-unknown-linux-musl --release
 
 # Final stage
 FROM debian:bullseye-slim
@@ -38,8 +38,9 @@ RUN groupadd -r appuser && useradd -r -g appuser appuser
 
 # Copy the binary from builder
 # Adjust the binary name to match your application's name in Cargo.toml
-COPY --from=builder /build/app/target/release/sparta /usr/local/bin/sparta
+RUN ls /build/app/target
 
+COPY --from=builder /build/app/target/x86_64-unknown-linux-musl/release/sparta /usr/local/bin/sparta
 # Set ownership
 RUN chown appuser:appuser /usr/local/bin/sparta
 
