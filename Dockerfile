@@ -38,7 +38,6 @@ RUN groupadd -r appuser && useradd -r -g appuser appuser
 
 # Copy the binary from builder
 # Adjust the binary name to match your application's name in Cargo.toml
-RUN ls /build/app/target
 
 COPY --from=builder /build/app/target/x86_64-unknown-linux-musl/release/sparta /usr/local/bin/sparta
 # Set ownership
