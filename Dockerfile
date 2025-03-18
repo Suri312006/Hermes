@@ -40,7 +40,7 @@ USER appuser
 # Expose the gRPC port
 EXPOSE 50051
 # Set the startup command
-CMD ["sparta"]# # Start with a Rust base image
+CMD ["/usr/local/bin/sparta"]# # Start with a Rust base image
 
 # FROM rust:1.85 AS builder
 

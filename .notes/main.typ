@@ -31,6 +31,7 @@ https://github.com/fortanix/rust-sgx/issues/401
 - [ ] aws nitro enclaves https://dev.to/bendecoste/running-an-http-server-with-aws-nitro-enclaves-elo
 	- https://docs.aws.amazon.com/enclaves/latest/user/getting-started.html
 	- https://github.com/aws/aws-nitro-enclaves-samples/tree/main/vsock_sample/rs
+	- `nitro-cli run-enclave --eif-path sparta.eif --cpu-count 2 --memory 4096 --debug-mode --enclave-cid 16`
 
 == Post MVP
 - [ ] multi-device support via support of proxy
