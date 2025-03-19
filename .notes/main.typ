@@ -71,6 +71,7 @@ https://github.com/fortanix/rust-sgx/issues/401
 
 https://docs.aws.amazon.com/enclaves/latest/user/nitro-enclave-cli-install.html
 
++ `nitro-cli `
 
 
 - install the nitro cli

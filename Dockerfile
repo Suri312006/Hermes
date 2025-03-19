@@ -32,15 +32,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Create a non-root user to run the application
 RUN groupadd -r appuser && useradd -r -g appuser appuser
 # Copy the binary from builder
-COPY --from=builder /build/app/target/x86_64-unknown-linux-musl/release/sparta /usr/local/bin/sparta
+COPY --from=builder /build/app/target/x86_64-unknown-linux-musl/release/sparta .
 # Set ownership
-RUN chown appuser:appuser /usr/local/bin/sparta
-# Switch to non-root user
-USER appuser
-# Expose the gRPC port
-EXPOSE 50051
+# EXPOSE 50051
 # Set the startup command
-CMD ["/usr/local/bin/sparta"]# # Start with a Rust base image
+CMD ["./sparta"]# # Start with a Rust base image
 
 # FROM rust:1.85 AS builder
 
