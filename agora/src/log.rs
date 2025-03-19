@@ -25,7 +25,7 @@ impl Log {
                     message
                 ))
             })
-            .level(log::LevelFilter::Info)
+            .level(log::LevelFilter::Trace)
             .level_for("h2", log::LevelFilter::Off)
             .level_for("tracing", log::LevelFilter::Off)
             .level_for("tonic", log::LevelFilter::Off)

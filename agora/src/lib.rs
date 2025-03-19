@@ -22,6 +22,7 @@ pub const MSG_SIZE: usize =
 /// The port that sparta will bind to.
 pub const SPARTA_PORT: &str = "[::1]:50051";
 
+
 /// The port that the proxy will bind to.
 pub const PROXY_PORT: &str = "[::1]:50052";
 

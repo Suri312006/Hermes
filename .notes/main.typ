@@ -31,6 +31,7 @@ https://github.com/fortanix/rust-sgx/issues/401
 - [ ] aws nitro enclaves https://dev.to/bendecoste/running-an-http-server-with-aws-nitro-enclaves-elo
 	- https://docs.aws.amazon.com/enclaves/latest/user/getting-started.html
 	- https://github.com/aws/aws-nitro-enclaves-samples/tree/main/vsock_sample/rs
+	- `nitro-cli build-enclave --docker-uri sparta --output-file sparta.eif`
 	- `nitro-cli run-enclave --eif-path sparta.eif --cpu-count 2 --memory 4096 --debug-mode --enclave-cid 16`
 
 == Post MVP
@@ -58,6 +59,11 @@ https://github.com/fortanix/rust-sgx/issues/401
 --key-name 'hello_world keypair' \
 --enclave-options 'Enabled=true' \
 --block-device-mappings 'DeviceName=/dev/sda1,Ebs={VolumeSize=64,VolumeType=gp3}'	```
+
+
+
+// `docker run -d -p 50051:50051 --name socat alpine/socat tcp-listen:50051,fork,reuseaddr vsock-connect:16:50051`
+`docker run -d -p 50051:50051 --name socat alpine/socat tcp-listen:50051,reuseaddr vsock-connect:16:50051`
 
 + add ssh security group
  TODO: describe how to do this later

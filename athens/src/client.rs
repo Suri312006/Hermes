@@ -19,7 +19,10 @@ impl SpartaClient {
     }
 
     pub async fn default() -> Result<Self> {
-        let server_url = format!("http://{}", agora::SPARTA_PORT);
+        // 54.183.155.206:50051
+        //         let server_url = format!("http://{}", agora::SPARTA_PORT);
+
+        let server_url = format!("http://{}:50051", "54.183.155.206");
 
         Ok(SpartaClient {
             user_client: UserServiceClient::connect(server_url.clone()).await?,
