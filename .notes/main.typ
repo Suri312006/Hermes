@@ -32,8 +32,11 @@ https://github.com/fortanix/rust-sgx/issues/401
 	- https://docs.aws.amazon.com/enclaves/latest/user/getting-started.html
 	- https://github.com/aws/aws-nitro-enclaves-samples/tree/main/vsock_sample/rs
 	- `nitro-cli build-enclave --docker-uri sparta --output-file sparta.eif`
+	- `nitro-cli build-enclave --docker-uri nitroxum --output-file nitroxum.eif`
 	- `nitro-cli run-enclave --eif-path sparta.eif --cpu-count 2 --memory 4096 --debug-mode --enclave-cid 16`
+	- `nitro-cli run-enclave --eif-path nitroxum.eif --cpu-count 2 --memory 4096 --debug-mode --enclave-cid 16`
 
+- `docker run -d -p 8080:8080 --name socat alpine/socat tcp-listen:8080,fork,reuseaddr vsock-connect:16:8080`
 == Post MVP
 - [ ] multi-device support via support of proxy
 	- inspired by how groovy had the provider system
@@ -50,6 +53,8 @@ https://github.com/fortanix/rust-sgx/issues/401
 	]
 = EC2 INSTRUCTIONS
 
+https://docs.aws.amazon.com/enclaves/latest/user/nitro-enclave-cli-install.html
+
 + launch ec2 instance
 	```
 	aws ec2 run-instances \
@@ -63,7 +68,8 @@ https://github.com/fortanix/rust-sgx/issues/401
 
 
 // `docker run -d -p 50051:50051 --name socat alpine/socat tcp-listen:50051,fork,reuseaddr vsock-connect:16:50051`
-`docker run -d -p 50051:50051 --name socat alpine/socat tcp-listen:50051,reuseaddr vsock-connect:16:50051`
+// `docker run -d -p 50051:50051 --name socat alpine/socat tcp-listen:50051,reuseaddr vsock-connect:16:50051`
+`docker run -d -p 8080:8080 --name socat alpine/socat tcp-listen:8080,reuseaddr vsock-connect:16:8080`
 
 + add ssh security group
  TODO: describe how to do this later
