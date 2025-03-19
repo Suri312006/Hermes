@@ -132,6 +132,14 @@ use tonic::{
     transport::{Endpoint, Uri},
 };
 
+use ed25519_dalek::pkcs8::EncodePrivateKey;
+use ed25519_dalek::pkcs8::EncodePublicKey;
+use ed25519_dalek::{VerifyingKey, pkcs8};
+use rand_core::OsRng;
+use tonic::IntoRequest;
+
+use bincode::serde::encode_to_vec;
+
 pub mod hello_world {
     tonic::include_proto!("hermes");
 }
@@ -146,16 +154,47 @@ async fn main() {
         }))
         .await
         .unwrap();
-    let mut client = UserServiceClient::new(endpoint);
-    let response = client
-        .create_user(NewUserReq {
-            public_key: vec![0],
-        })
-        // .say_hello(Request::new(HelloRequest {
-        //     name: "My name".to_string(),
-        // }))
+    let mut user_client = UserServiceClient::new(endpoint);
+    // let response = client
+    //     .create_user(NewUserReq {
+    //         public_key: vec![0],
+    //     })
+    //     // .say_hello(Request::new(HelloRequest {
+    //     //     name: "My name".to_string(),
+    //     // }))
+    //     .await
+    //     .unwrap();
+
+    let mut rng = OsRng;
+
+    let signing_key = ed25519_dalek::SigningKey::generate(&mut rng);
+    let verifying_key = signing_key.verifying_key();
+
+    let encoded_key = encode_to_vec(verifying_key, bincode::config::standard()).unwrap();
+
+    let user_id = user_client
+        .create_user(
+            NewUserReq {
+                public_key: encoded_key,
+            }
+            .into_request(),
+        )
         .await
+        .unwrap()
+        .into_inner()
+        .id;
+
+    let out = signing_key
+        .to_pkcs8_pem(pkcs8::spki::der::pem::LineEnding::LF)
         .unwrap();
 
-    dbg!(response);
+    let x = verifying_key
+        .to_public_key_pem(pkcs8::spki::der::pem::LineEnding::LF)
+        .unwrap();
+
+    println!("public key:\n{x}");
+
+    println!("user_id: {}\nprivate key: \n{}", user_id, out.as_str());
+
+    dbg!(user_id);
 }
