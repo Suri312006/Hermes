@@ -20,7 +20,7 @@ pub const MSG_SIZE: usize =
     MSG_STORE_BLOCK_SIZE - (2 * MSG_ADDRESS_SIZE) as usize - MSG_RECIPIENT_SIZE as usize;
 
 /// The port that sparta will bind to.
-pub const SPARTA_PORT: &str = "127.0.0.1:50051";
+pub const SPARTA_PORT: &str = "0.0.0.0:50051";
 
 /// The port that the proxy will bind to.
 pub const PROXY_PORT: &str = "[::1]:50052";
