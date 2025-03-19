@@ -98,26 +98,64 @@
 //     // then we want to measure throughput of the server
 // }
 
-use bytes::Bytes;
-use http::{Request, Uri};
-use http_body_util::Full;
-use hyper::client::conn::http1::handshake;
-use hyper_client_sockets::{Backend, tokio::TokioBackend, uri::VsockUri};
-use tokio_vsock::VsockAddr;
+// use bytes::Bytes;
+// use http::{Request, Uri};
+// use http_body_util::Full;
+// use hyper::client::conn::http1::handshake;
+// use hyper_client_sockets::{Backend, tokio::TokioBackend, uri::VsockUri};
+// use tokio_vsock::VsockAddr;
+
+// #[tokio::main]
+// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//     let addr = VsockAddr::new(16, 8080);
+//     let uri = <Uri as VsockUri>::vsock(addr, "/").expect("valid uri");
+//     let io = TokioBackend::connect_to_vsock_socket(addr).await.unwrap();
+//     let (mut send_request, conn) = handshake::<_, Full<Bytes>>(io).await.unwrap();
+//     tokio::spawn(conn);
+//     let response = send_request
+//         .send_request(Request::new(Full::new(Bytes::new())))
+//         .await
+//         .unwrap();
+
+//     println!("Resp: {:?}", response);
+
+//     Ok(())
+
+// }
+
+use hello_world::{NewUserReq, user_service_client::UserServiceClient};
+// use hello_world::{HelloRequest, greeter_client::GreeterClient};
+use hyper_util::rt::TokioIo;
+use tokio_vsock::{VsockAddr, VsockStream};
+use tonic::{
+    Request,
+    transport::{Endpoint, Uri},
+};
+
+pub mod hello_world {
+    tonic::include_proto!("hermes");
+}
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let addr = VsockAddr::new(16, 8080);
-    let uri = <Uri as VsockUri>::vsock(addr, "/").expect("valid uri");
-    let io = TokioBackend::connect_to_vsock_socket(addr).await.unwrap();
-    let (mut send_request, conn) = handshake::<_, Full<Bytes>>(io).await.unwrap();
-    tokio::spawn(conn);
-    let response = send_request
-        .send_request(Request::new(Full::new(Bytes::new())))
+async fn main() {
+    let endpoint = Endpoint::from_static("http://localhost")
+        .connect_with_connector(tower::service_fn(|_: Uri| async {
+            Ok::<_, std::io::Error>(TokioIo::new(
+                VsockStream::connect(VsockAddr::new(16, 50051)).await?,
+            ))
+        }))
+        .await
+        .unwrap();
+    let mut client = UserServiceClient::new(endpoint);
+    let response = client
+        .create_user(NewUserReq {
+            public_key: vec![0],
+        })
+        // .say_hello(Request::new(HelloRequest {
+        //     name: "My name".to_string(),
+        // }))
         .await
         .unwrap();
 
-    println!("Resp: {:?}", response);
-
-    Ok(())
+    dbg!(response);
 }
