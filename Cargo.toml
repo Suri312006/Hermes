@@ -5,6 +5,6 @@ members = [ "agora",
   "sator", 
   "sparta",
   "documents/charts"
-]
+, "trojan"]
 
 resolver = "1"
