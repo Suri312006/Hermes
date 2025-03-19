@@ -41,18 +41,19 @@ impl Sparta {
 
     pub async fn run(self) -> Result<()> {
         //TODO: probably want to make the port a config option
+        // let socket = VsockAddr::new(16, 50051);
         let socket =
             SocketAddr::from_str(agora::SPARTA_PORT).expect("Parsing Socket Address Failed!");
+        info!("Server Listening at {}!", socket);
+        self.router.serve(socket).await.map_err(|e| eyre!(e))
 
         // cid and 32 bit port number
-        let socket = VsockAddr::new(16, 50051);
-        let listener = VsockListener::bind(socket)?;
+        // let listener = VsockListener::bind(socket)?;
 
-        // info!("Server Listening at {}!", socket);
-        self.router
-            .serve_with_incoming(listener.incoming())
-            .await
-            .map_err(|e| eyre!(e))
+        // self.router
+        //     .serve_with_incoming(listener.incoming())
+        //     .await
+        //     .map_err(|e| eyre!(e))
         // self.router.serve(listener).await.map_err(|e| eyre!(e))
     }
 }
