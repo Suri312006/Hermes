@@ -5,11 +5,7 @@ fn main() {
         .use_arc_self(true)
         // this is where our proto files are
         .compile_protos(
-            &[
-                "../proto/message.proto",
-                "../proto/user.proto",
-                "../proto/proxy.proto",
-            ],
+            &["../proto/proxy.proto", "../proto/server.proto"],
             &["../proto"],
         )
         .unwrap_or_else(|e| panic!("unable to compile proto's due to {e:?}"))

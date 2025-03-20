@@ -1,27 +1,27 @@
 use std::{collections::VecDeque, sync::Arc};
 
-use agora::SPARTA_PORT;
+use agora::{TROJAN_IP, TROJAN_PORT};
 use athens::grpc::{
-    Ack, Packet, PacketList, ProxyFetchReq, message_service_client::MessageServiceClient,
-    proxy_service_server::ProxyService,
+    Ack, Packet, PacketList, ProxyFetchReq, proxy_service_server::ProxyService,
+    trojan_service_client::TrojanServiceClient,
 };
-use color_eyre::eyre::{Result, eyre};
+use color_eyre::eyre::Result;
 use tokio::sync::Mutex;
 use tonic::{Request, Response, Status, async_trait, transport::Channel};
 
 pub struct ProxyServer {
     messages_vec: Arc<Mutex<VecDeque<Packet>>>,
-    sparta_client: Arc<Mutex<MessageServiceClient<Channel>>>,
+    trojan_client: Arc<Mutex<TrojanServiceClient<Channel>>>, // sparta_client: Arc<Mutex<MessageServiceClient<Channel>>>,
 }
 
 impl ProxyServer {
     pub async fn new(messages_vec: Arc<Mutex<VecDeque<Packet>>>) -> Result<Self> {
-        let server_url = format!("http://{}", SPARTA_PORT);
+        let server_url = format!("http://{}:{}", TROJAN_IP, TROJAN_PORT);
 
-        let sparta_client = MessageServiceClient::connect(server_url).await?;
+        let trojan_client = TrojanServiceClient::connect(server_url).await?;
         Ok(ProxyServer {
             messages_vec,
-            sparta_client: Arc::new(Mutex::new(sparta_client)),
+            trojan_client: Arc::new(Mutex::new(trojan_client)),
         })
     }
 }
@@ -29,7 +29,7 @@ impl ProxyServer {
 #[async_trait]
 impl ProxyService for ProxyServer {
     async fn send(self: Arc<Self>, req: Request<Packet>) -> Result<Response<Ack>, Status> {
-        let mut client = self.sparta_client.lock().await;
+        let mut client = self.trojan_client.lock().await;
         let ack = client.send(req.into_inner()).await?.into_inner();
 
         Ok(Response::new(ack))

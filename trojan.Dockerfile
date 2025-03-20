@@ -8,7 +8,7 @@ WORKDIR /build
 COPY ./agora /build/agora/
 COPY ./proto /build/proto/
 # Then copy your application code
-COPY ./sator /build/app/
+COPY ./trojan /build/app/
 # Set working directory to your app
 WORKDIR /build/app
 # Install protobuf compiler
@@ -32,8 +32,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Create a non-root user to run the application
 RUN groupadd -r appuser && useradd -r -g appuser appuser
 # Copy the binary from builder
-COPY --from=builder /build/app/target/x86_64-unknown-linux-musl/release/sator .
+COPY --from=builder /build/app/target/x86_64-unknown-linux-musl/release/trojan .
 # Set ownership
-# EXPOSE 50051
+EXPOSE 50051
 # Set the startup command
-CMD ["./sator"]
+CMD ["./trojan"]

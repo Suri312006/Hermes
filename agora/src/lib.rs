@@ -20,8 +20,14 @@ pub const MSG_SIZE: usize =
     MSG_STORE_BLOCK_SIZE - (2 * MSG_ADDRESS_SIZE) as usize - MSG_RECIPIENT_SIZE as usize;
 
 /// The port that sparta will bind to.
+pub const TROJAN_BIND_ADDR: &str = "0.0.0.0:50051";
 
-pub const SPARTA_PORT: &str = "0.0.0.0:50051";
+pub const TROJAN_PORT: &str = "50051";
+
+pub const TROJAN_IP: &str = "54.183.155.206";
+
+pub const SPARTA_VSOCK_CID: u32 = 16;
+pub const SPARTA_VSOCK_PORT: u32 = 50051;
 
 /// The port that the proxy will bind to.
 pub const PROXY_PORT: &str = "[::1]:50052";

@@ -4,7 +4,7 @@ fn main() {
         .protoc_arg("--experimental_allow_proto3_optional")
         .use_arc_self(true)
         .compile_protos(
-            &["../proto/message.proto", "../proto/user.proto"],
+            &["../proto/server.proto"],
             // this is where our proto files are
             &["../proto"],
         )

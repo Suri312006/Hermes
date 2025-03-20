@@ -6,7 +6,10 @@
 // - happened in groovy
 //
 
+use agora::TROJAN_IP;
+use agora::TROJAN_PORT;
 use athens::grpc::NewUserReq;
+use athens::grpc::trojan_service_client::TrojanServiceClient;
 use ed25519_dalek::pkcs8::EncodePrivateKey;
 use ed25519_dalek::pkcs8::EncodePublicKey;
 
@@ -14,7 +17,7 @@ use ed25519_dalek::{VerifyingKey, pkcs8};
 use std::{collections::VecDeque, sync::Arc, time::Duration};
 use tonic::IntoRequest;
 
-use athens::{client::SpartaClient, config::Config, grpc::FetchReq};
+use athens::{config::Config, grpc::FetchReq};
 use bincode::serde::encode_to_vec;
 use clap::{Parser, Subcommand};
 use color_eyre::eyre::{Result, eyre};
@@ -61,7 +64,9 @@ async fn main() -> Result<()> {
     color_eyre::install()?;
     let args = Args::parse();
 
-    let mut client = SpartaClient::default().await?;
+    // let mut client = SpartaClient::default().await?;
+    let client_url = format!("http://{}:{}", TROJAN_IP, TROJAN_PORT);
+    let mut client = TrojanServiceClient::connect(client_url).await?;
 
     match args.command {
         Commands::CreateUser {} => {
@@ -73,7 +78,6 @@ async fn main() -> Result<()> {
             let encoded_key = encode_to_vec(verifying_key, bincode::config::standard())?;
 
             let user_id = client
-                .user_client
                 .create_user(
                     NewUserReq {
                         public_key: encoded_key,
@@ -135,7 +139,6 @@ async fn main() -> Result<()> {
             let handle: JoinHandle<Result<()>> = spawn(async move {
                 loop {
                     if let Some(msg) = client
-                        .msg_client
                         .fetch(FetchReq {
                             recipient: config.user_id.clone(),
                             amount: 1,
