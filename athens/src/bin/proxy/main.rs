@@ -15,6 +15,7 @@ use ed25519_dalek::pkcs8::EncodePrivateKey;
 use ed25519_dalek::pkcs8::EncodePublicKey;
 
 use ed25519_dalek::{VerifyingKey, pkcs8};
+use log::trace;
 use std::{collections::VecDeque, sync::Arc, time::Duration};
 use tonic::IntoRequest;
 
@@ -68,6 +69,8 @@ async fn main() -> Result<()> {
 
     // let mut client = SpartaClient::default().await?;
     let client_url = format!("http://{}:{}", TROJAN_IP, TROJAN_PORT);
+    trace!("client_url: {}", client_url);
+
     let mut client = TrojanServiceClient::connect(client_url).await?;
 
     match args.command {
@@ -79,6 +82,7 @@ async fn main() -> Result<()> {
 
             let encoded_key = encode_to_vec(verifying_key, bincode::config::standard())?;
 
+            trace!("about to hit up client");
             let user_id = client
                 .create_user(
                     NewUserReq {
@@ -89,6 +93,7 @@ async fn main() -> Result<()> {
                 .await?
                 .into_inner()
                 .id;
+            trace!("got a resp");
 
             let out = signing_key.to_pkcs8_pem(pkcs8::spki::der::pem::LineEnding::LF)?;
 
