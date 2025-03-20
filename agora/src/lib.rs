@@ -24,7 +24,7 @@ pub const TROJAN_BIND_ADDR: &str = "0.0.0.0:50051";
 
 pub const TROJAN_PORT: &str = "50051";
 
-pub const TROJAN_IP: &str = "54.183.155.206";
+pub const TROJAN_IP: &str = "52.53.175.2";
 
 pub const SPARTA_VSOCK_CID: u32 = 16;
 pub const SPARTA_VSOCK_PORT: u32 = 50051;
