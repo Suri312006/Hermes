@@ -23,6 +23,7 @@ log = "0.4.22"
 ed25519-dalek = {version = "2.1.1", features = ["rand_core", "pkcs8", "pem", "serde"]}
 rand_core = { version = "0.6.4", features = ["serde", "std"] }
 bincode = {version = "2.0.1", features = ["serde"]}
+hex = "0.4.3"
 
 [[bin]]
 name = "proxy"

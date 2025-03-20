@@ -6,16 +6,17 @@ use athens::grpc::{
     trojan_service_client::TrojanServiceClient,
 };
 use color_eyre::eyre::Result;
+use log::error;
 use tokio::sync::Mutex;
 use tonic::{Request, Response, Status, async_trait, transport::Channel};
 
 pub struct ProxyServer {
-    messages_vec: Arc<Mutex<VecDeque<Packet>>>,
+    messages_vec: Arc<Mutex<Vec<VecDeque<Packet>>>>,
     trojan_client: Arc<Mutex<TrojanServiceClient<Channel>>>, // sparta_client: Arc<Mutex<MessageServiceClient<Channel>>>,
 }
 
 impl ProxyServer {
-    pub async fn new(messages_vec: Arc<Mutex<VecDeque<Packet>>>) -> Result<Self> {
+    pub async fn new(messages_vec: Arc<Mutex<Vec<VecDeque<Packet>>>>) -> Result<Self> {
         let server_url = format!("http://{}:{}", TROJAN_IP, TROJAN_PORT);
 
         let trojan_client = TrojanServiceClient::connect(server_url).await?;
@@ -39,11 +40,28 @@ impl ProxyService for ProxyServer {
         self: Arc<Self>,
         req: Request<ProxyFetchReq>,
     ) -> Result<Response<PacketList>, Status> {
+        let (headers, _, req) = req.into_parts();
+
+        let dev_id = headers
+            .get("dev_id")
+            .ok_or_else(|| error!("Device Id was not passed into headers!"))
+            .map_err(|e| Status::internal("dw about it"))?
+            .to_str()
+            .map_err(|e| {
+                error!("{}", e);
+                Status::internal("dw about it")
+            })?
+            .parse::<usize>()
+            .map_err(|e| {
+                error!("{}", e);
+                Status::internal("dw about it")
+            })?;
+
         let mut msg_queue = self.messages_vec.lock().await;
 
         let mut ret = Vec::new();
 
-        while let Some(msg) = msg_queue.pop_front() {
+        while let Some(msg) = msg_queue.get_mut(dev_id).unwrap().pop_front() {
             ret.push(msg);
         }
 

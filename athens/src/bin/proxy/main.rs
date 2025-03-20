@@ -21,6 +21,7 @@ use rand_core::OsRng;
 use server::Proxy;
 use tokio::{select, spawn, sync::Mutex, task::JoinHandle, time::sleep};
 
+mod auth;
 mod server;
 mod service;
 mod state;
@@ -130,7 +131,7 @@ async fn main() -> Result<()> {
             // now we set up a worker thread that fetches for delay
             let mut state = State::read()?;
 
-            let msgs_queue = Arc::new(Mutex::new(VecDeque::new()));
+            let msgs_queue = Arc::new(Mutex::new(vec![VecDeque::new()]));
             let closure_queue = msgs_queue.clone();
 
             let recipient_sig = state.user_key.sign(state.user_id.as_bytes());
@@ -152,7 +153,10 @@ async fn main() -> Result<()> {
                         info!("pulling!");
                         //NOTE: this only works if adversary cannot observe the plaintext of the communication link between the enclave and the recipient
                         if msg.recipient == state.user_id {
-                            closure_queue.lock().await.push_back(msg.clone());
+                            let mut queues = closure_queue.lock().await;
+                            for queue in queues.iter_mut() {
+                                queue.push_back(msg.clone());
+                            }
                         }
                     }
 
@@ -185,9 +189,9 @@ async fn main() -> Result<()> {
             let verifying_key = VerifyingKey::from_public_key_pem(&formatted_dev_key)?;
 
             let state = State::read()?;
-            let state = state.add_device_pub_key(verifying_key)?;
+            let _ = state.add_device_pub_key(verifying_key)?;
 
-            
+            println!("{}", "Successfully added device!".green());
 
             return Ok(());
         }

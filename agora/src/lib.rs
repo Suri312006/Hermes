@@ -29,6 +29,8 @@ pub const TROJAN_IP: &str = "52.53.175.2";
 pub const SPARTA_VSOCK_CID: u32 = 16;
 pub const SPARTA_VSOCK_PORT: u32 = 50051;
 
+pub const VERIFY_PHRASE: &str = "HERMES";
+
 /// The port that the proxy will bind to.
 pub const PROXY_PORT: &str = "[::1]:50052";
 

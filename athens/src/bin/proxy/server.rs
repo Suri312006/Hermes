@@ -10,18 +10,18 @@ use tonic::transport::{
     server::{Router, TcpConnectInfo},
 };
 
-use crate::service::ProxyServer;
+use crate::{auth::AuthInterceptor, service::ProxyServer};
+use tonic_middleware::InterceptorFor;
 
 pub struct Proxy {
     router: Router,
 }
 
 impl Proxy {
-    pub async fn new(messages_vec: Arc<Mutex<VecDeque<Packet>>>) -> Result<Self> {
-        // Log::init()?;
-
-        let router = Server::builder().add_service(ProxyServiceServer::new(
-            ProxyServer::new(messages_vec.clone()).await?,
+    pub async fn new(messages_vec: Arc<Mutex<Vec<VecDeque<Packet>>>>) -> Result<Self> {
+        let router = Server::builder().add_service(InterceptorFor::new(
+            ProxyServiceServer::new(ProxyServer::new(messages_vec.clone()).await?),
+            AuthInterceptor::new(),
         ));
 
         Ok(Proxy { router })
