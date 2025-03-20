@@ -18,7 +18,7 @@ pub struct Proxy {
 
 impl Proxy {
     pub async fn new(messages_vec: Arc<Mutex<VecDeque<Packet>>>) -> Result<Self> {
-        Log::init()?;
+        // Log::init()?;
 
         let router = Server::builder().add_service(ProxyServiceServer::new(
             ProxyServer::new(messages_vec.clone()).await?,
