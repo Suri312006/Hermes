@@ -25,13 +25,14 @@ async fn main() -> Result<()> {
     let trojan_server = TrojanServer::new().await?;
     let router = Server::builder().add_service(TrojanServiceServer::new(trojan_server));
 
-    router
-        .serve(
-            SocketAddr::from_str(format!("https://{}:{}", TROJAN_BIND_ADDR, TROJAN_PORT).as_str())
-                .expect("weird socket addr"),
-        )
-        .await
-        .map_err(|err| eyre!(err))
+    let sock = match SocketAddr::from_str(
+        format!("https://{}:{}", TROJAN_BIND_ADDR, TROJAN_PORT).as_str(),
+    ) {
+        Ok(sock) => sock,
+        Err(e) => return Err(eyre!(e)),
+    };
+
+    router.serve(sock).await.map_err(|err| eyre!(err))
 }
 
 pub struct TrojanServer {
