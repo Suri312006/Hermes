@@ -27,7 +27,7 @@ async fn main() -> Result<()> {
 
     router
         .serve(
-            SocketAddr::from_str(format!("{}:{}", TROJAN_BIND_ADDR, TROJAN_PORT).as_str())
+            SocketAddr::from_str(format!("https://{}:{}", TROJAN_BIND_ADDR, TROJAN_PORT).as_str())
                 .expect("weird socket addr"),
         )
         .await
