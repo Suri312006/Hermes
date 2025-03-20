@@ -12,7 +12,12 @@ pub enum Commands {
     /// Creates an account and sets up your device.
     /// Will also lauch the Athens proxy to communicate on
     /// a regular interval with Sparta.
-    Init {},
+    ///
+    Register {
+        // creates dev priv/pub key
+        // stores priv key on device
+        // signs send and fetch with key
+    },
 
     #[command(subcommand)]
     Message(MessageSubCommands),

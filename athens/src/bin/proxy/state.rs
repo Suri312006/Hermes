@@ -7,12 +7,15 @@ use std::{
 
 use color_eyre::eyre::{Context, Result};
 use directories::ProjectDirs;
+use ed25519_dalek::{SigningKey, VerifyingKey};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct Config {
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct State {
     pub user_id: String,
+    pub user_key: SigningKey,
+    pub device_pub_keys: Vec<VerifyingKey>,
 }
 
 const CONFIG_FILE_NAME: &str = "config.toml";
@@ -30,8 +33,8 @@ lazy_static! {
             .map(PathBuf::from);
 }
 
-impl Config {
-    pub fn new(user_id: String) -> Result<Self> {
+impl State {
+    pub fn new(user_id: String, signing_key: SigningKey) -> Result<Self> {
         let config_dir = get_config_dir();
 
         fs::create_dir_all(&config_dir)
@@ -49,7 +52,12 @@ impl Config {
                     config_dir.join(CONFIG_FILE_NAME)
                 )
             })?;
-        let config = Config { user_id };
+
+        let config = Self {
+            user_id,
+            user_key: signing_key,
+            device_pub_keys: Vec::new(),
+        };
 
         f.write_all(toml::to_string(&config)?.as_bytes())?;
 
@@ -61,8 +69,30 @@ impl Config {
         let mut s = String::new();
         f.read_to_string(&mut s)?;
 
-        let cfg: Config = toml::from_str(s.as_str())?;
+        let cfg: Self = toml::from_str(s.as_str())?;
         Ok(cfg)
+    }
+
+    pub fn add_device_pub_key(mut self, key: VerifyingKey) -> Result<Self> {
+        let config_dir = get_config_dir();
+        let mut f = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .open(config_dir.join("config.toml"))
+            .with_context(|| {
+                format!(
+                    "Error occurred when writing to configuration file: {:?}.",
+                    config_dir.join(CONFIG_FILE_NAME)
+                )
+            })?;
+
+        self.device_pub_keys.push(key);
+
+        f.write_all(toml::to_string(&self)?.as_bytes())?;
+
+        Ok(self.to_owned())
     }
 }
 

@@ -1,50 +1,50 @@
-use std::process::Command;
-
-use agora::{MSG_SIZE, PROXY_PORT, SPARTA_PORT};
+use agora::{MSG_SIZE, PROXY_PORT};
 use args::{CliArgs, Commands, MessageSubCommands};
-use athens::{
-    config::Config,
-    grpc::{
-        FetchReq, NewUserReq, Packet, ProxyFetchReq, message_service_client::MessageServiceClient,
-        proxy_service_client::ProxyServiceClient, user_service_client::UserServiceClient,
-        user_service_server,
-    },
-};
+use athens::grpc::{Packet, ProxyFetchReq, proxy_service_client::ProxyServiceClient};
 use clap::Parser;
 use color_eyre::{
     eyre::{Result, eyre},
     owo_colors::OwoColorize,
 };
-use tonic::IntoRequest;
+use rand_core::OsRng;
+
+use ed25519_dalek::pkcs8::EncodePublicKey;
 
 mod args;
 #[tokio::main]
 async fn main() -> Result<()> {
     color_eyre::install()?;
 
-    let server_url = format!("http://{}", SPARTA_PORT);
-
     let proxy_url = format!("http://{}", PROXY_PORT);
 
     let args = CliArgs::parse();
 
-    let mut proxy_client = ProxyServiceClient::connect(proxy_url).await?;
-
     match args.command {
-        Commands::Init {} => {
-            let mut user_client = UserServiceClient::connect(server_url).await?;
-            let user_id = user_client
-                .create_user(NewUserReq::default().into_request())
-                .await?
-                .into_inner()
-                .id;
+        Commands::Register {} => {
+            let mut rng = OsRng;
 
-            let _ = Config::new(user_id)?;
+            // now we have to store this key
+            let signing_key = ed25519_dalek::SigningKey::generate(&mut rng);
 
-            println!("{}", "Initialization Successfull!".green())
+            let verifying_key = signing_key.verifying_key();
+
+            let verifying_key = verifying_key
+                .to_public_key_pem(ed25519_dalek::pkcs8::spki::der::pem::LineEnding::LF)?;
+
+            let mut iter = verifying_key.split("\n");
+            iter.next();
+
+            println!(
+                "Registration Key: {}",
+                iter.next().ok_or(eyre!("Weird verifying key"))?.green()
+            );
+
+            println!("Next: Copy the above key into your proxy as follows");
+            println!("\nproxy add-device -k {}", "<KEY>".green());
         }
 
         Commands::Message(subcommand) => {
+            let mut proxy_client = ProxyServiceClient::connect(proxy_url).await?;
             match subcommand {
                 MessageSubCommands::Send {
                     message,

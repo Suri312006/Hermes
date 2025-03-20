@@ -12,7 +12,7 @@ message Ack{}
 message FetchReq{
   string recipient = 1;
   int32 amount = 2;
-  string sig = 3;
+  bytes sig = 3;
 }
 
 message PacketList {

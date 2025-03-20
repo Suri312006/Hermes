@@ -3,15 +3,16 @@ use agora::TROJAN_IP;
 use agora::TROJAN_PORT;
 use athens::grpc::NewUserReq;
 use athens::grpc::trojan_service_client::TrojanServiceClient;
-use ed25519_dalek::pkcs8::EncodePrivateKey;
-use ed25519_dalek::pkcs8::EncodePublicKey;
+use color_eyre::owo_colors::OwoColorize;
+use ed25519_dalek::VerifyingKey;
+use ed25519_dalek::ed25519::signature::SignerMut;
+use ed25519_dalek::pkcs8::DecodePublicKey;
+use state::State;
 
-use ed25519_dalek::{VerifyingKey, pkcs8};
-use log::trace;
 use std::{collections::VecDeque, sync::Arc, time::Duration};
 use tonic::IntoRequest;
 
-use athens::{config::Config, grpc::FetchReq};
+use athens::grpc::FetchReq;
 use bincode::serde::encode_to_vec;
 use clap::{Parser, Subcommand};
 use color_eyre::eyre::{Result, eyre};
@@ -22,6 +23,7 @@ use tokio::{select, spawn, sync::Mutex, task::JoinHandle, time::sleep};
 
 mod server;
 mod service;
+mod state;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -41,6 +43,12 @@ enum Commands {
         #[arg(short, long, default_value_t = 30)]
         messages_per_time_step: u64,
     },
+
+    /// stores device public keys to verify fetch requests
+    AddDevice {
+        #[arg(short, long)]
+        key: String,
+    },
 }
 
 #[derive(Clone, Copy, Debug, clap::ValueEnum, Default)]
@@ -59,9 +67,7 @@ async fn main() -> Result<()> {
     Log::init()?;
     let args = Args::parse();
 
-    // let mut client = SpartaClient::default().await?;
     let client_url = format!("http://{}:{}", TROJAN_IP, TROJAN_PORT);
-    trace!("client_url: {}", client_url);
 
     let mut client = TrojanServiceClient::connect(client_url).await?;
 
@@ -74,8 +80,6 @@ async fn main() -> Result<()> {
 
             let encoded_key = encode_to_vec(verifying_key, bincode::config::standard())?;
 
-            trace!("about to hit up client");
-
             let user_id = client
                 .create_user(
                     NewUserReq {
@@ -87,16 +91,8 @@ async fn main() -> Result<()> {
                 .into_inner()
                 .id;
 
-            trace!("got a resp");
-
-            let out = signing_key.to_pkcs8_pem(pkcs8::spki::der::pem::LineEnding::LF)?;
-            let x = verifying_key.to_public_key_pem(pkcs8::spki::der::pem::LineEnding::LF)?;
-
-            // ok so now we need to store this signing key as a pem
-
-            println!("public key:\n{x}");
-
-            println!("user_id: {}\nprivate key: \n{}", user_id, out.as_str());
+            let _ = State::new(user_id, signing_key)?;
+            println!("{}", "User Creation Successfull!".green());
             Ok(())
         }
 
@@ -132,19 +128,21 @@ async fn main() -> Result<()> {
             }
 
             // now we set up a worker thread that fetches for delay
-            let config = Config::read()?;
+            let mut state = State::read()?;
 
             let msgs_queue = Arc::new(Mutex::new(VecDeque::new()));
             let closure_queue = msgs_queue.clone();
+
+            let recipient_sig = state.user_key.sign(state.user_id.as_bytes());
 
             // spawn a task that keeps pulling from sparta on a regular interval
             let handle: JoinHandle<Result<()>> = spawn(async move {
                 loop {
                     if let Some(msg) = client
                         .fetch(FetchReq {
-                            recipient: config.user_id.clone(),
+                            recipient: state.user_id.clone(),
                             amount: 1,
-                            sig: String::new(),
+                            sig: recipient_sig.to_vec(),
                         })
                         .await?
                         .into_inner()
@@ -153,7 +151,7 @@ async fn main() -> Result<()> {
                     {
                         info!("pulling!");
                         //NOTE: this only works if adversary cannot observe the plaintext of the communication link between the enclave and the recipient
-                        if msg.recipient == config.user_id {
+                        if msg.recipient == state.user_id {
                             closure_queue.lock().await.push_back(msg.clone());
                         }
                     }
@@ -176,6 +174,22 @@ async fn main() -> Result<()> {
 
             };
             resp
+        }
+        Commands::AddDevice { key } => {
+            // key needs to be parsed as a verifying key
+            let formatted_dev_key = format!(
+                "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----",
+                key
+            );
+
+            let verifying_key = VerifyingKey::from_public_key_pem(&formatted_dev_key)?;
+
+            let state = State::read()?;
+            let state = state.add_device_pub_key(verifying_key)?;
+
+            
+
+            return Ok(());
         }
     }
 }
