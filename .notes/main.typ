@@ -27,16 +27,14 @@ https://github.com/fortanix/rust-sgx/issues/401
 - [ ] End 2 End encryption
 - [ ] Discuss the implementation of the Facebook ORAM library
 - [ ] performance discrepancy possibly due to hardware im running on
-- [ ] apache teaclave http server example with tls
-- [ ] aws nitro enclaves https://dev.to/bendecoste/running-an-http-server-with-aws-nitro-enclaves-elo
+- [x] aws nitro enclaves https://dev.to/bendecoste/running-an-http-server-with-aws-nitro-enclaves-elo
 	- https://docs.aws.amazon.com/enclaves/latest/user/getting-started.html
 	- https://github.com/aws/aws-nitro-enclaves-samples/tree/main/vsock_sample/rs
 	- `nitro-cli build-enclave --docker-uri sparta --output-file sparta.eif`
 	- `nitro-cli build-enclave --docker-uri nitroxum --output-file nitroxum.eif`
 	- `nitro-cli run-enclave --eif-path sparta.eif --cpu-count 2 --memory 4096 --debug-mode --enclave-cid 16`
 	- `nitro-cli run-enclave --eif-path nitroxum.eif --cpu-count 2 --memory 4096 --debug-mode --enclave-cid 16`
-
-- `docker run -d -p 8080:8080 --name socat alpine/socat tcp-listen:8080,fork,reuseaddr vsock-connect:16:8080`
+	- `docker run -d -p 8080:8080 --name socat alpine/socat tcp-listen:8080,fork,reuseaddr vsock-connect:16:8080`
 == Post MVP
 - [ ] multi-device support via support of proxy
 	- inspired by how groovy had the provider system

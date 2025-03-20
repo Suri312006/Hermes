@@ -1,11 +1,3 @@
-// message that you want to send
-//
-// person you want to send it to
-//
-// address book synchronization would be pretty cool
-// - happened in groovy
-//
-
 use agora::Log;
 use agora::TROJAN_IP;
 use agora::TROJAN_PORT;
@@ -83,6 +75,7 @@ async fn main() -> Result<()> {
             let encoded_key = encode_to_vec(verifying_key, bincode::config::standard())?;
 
             trace!("about to hit up client");
+
             let user_id = client
                 .create_user(
                     NewUserReq {
@@ -93,11 +86,13 @@ async fn main() -> Result<()> {
                 .await?
                 .into_inner()
                 .id;
+
             trace!("got a resp");
 
             let out = signing_key.to_pkcs8_pem(pkcs8::spki::der::pem::LineEnding::LF)?;
-
             let x = verifying_key.to_public_key_pem(pkcs8::spki::der::pem::LineEnding::LF)?;
+
+            // ok so now we need to store this signing key as a pem
 
             println!("public key:\n{x}");
 
