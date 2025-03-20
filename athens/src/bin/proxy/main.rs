@@ -6,6 +6,7 @@
 // - happened in groovy
 //
 
+use agora::Log;
 use agora::TROJAN_IP;
 use agora::TROJAN_PORT;
 use athens::grpc::NewUserReq;
@@ -62,6 +63,7 @@ enum TimeGranularity {
 #[tokio::main]
 async fn main() -> Result<()> {
     color_eyre::install()?;
+    Log::init()?;
     let args = Args::parse();
 
     // let mut client = SpartaClient::default().await?;

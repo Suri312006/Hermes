@@ -24,6 +24,7 @@ mod grpc {
 #[tokio::main]
 async fn main() -> Result<()> {
     Log::init()?;
+    color_eyre::install()?;
     let trojan_server = TrojanServer::new().await?;
     let router = Server::builder().add_service(TrojanServiceServer::new(trojan_server));
 
