@@ -26,6 +26,8 @@ async fn main() -> Result<()> {
             // now we have to store this key
             let signing_key = ed25519_dalek::SigningKey::generate(&mut rng);
 
+            // client has state too?
+
             let verifying_key = signing_key.verifying_key();
 
             let verifying_key = verifying_key
@@ -81,6 +83,7 @@ async fn main() -> Result<()> {
         Commands::Contacts(args) => {
             // add contacts
             todo!("Implement contacts");
+            // okayyyyy so basically we can just worry about this later
         }
     }
 

@@ -2,6 +2,7 @@ use agora::Log;
 use agora::TROJAN_IP;
 use agora::TROJAN_PORT;
 use athens::grpc::NewUserReq;
+use athens::grpc::Packet;
 use athens::grpc::trojan_service_client::TrojanServiceClient;
 use color_eyre::owo_colors::OwoColorize;
 use ed25519_dalek::VerifyingKey;
@@ -61,6 +62,24 @@ enum TimeGranularity {
     Minute,
     Second,
 }
+
+struct Device {
+    pub_key: VerifyingKey,
+    message_queue: VecDeque<Packet>,
+    dummy_messages: u32,
+}
+
+impl Device {
+    fn new(pub_key: VerifyingKey) -> Self {
+        Device {
+            pub_key,
+            message_queue: VecDeque::new(),
+            dummy_messages: 0,
+        }
+    }
+}
+
+type Devices = Arc<Mutex<Vec<Device>>>;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -129,10 +148,18 @@ async fn main() -> Result<()> {
             }
 
             // now we set up a worker thread that fetches for delay
+            //TODO: do dis shi
             let mut state = State::read()?;
 
-            let msgs_queue = Arc::new(Mutex::new(vec![VecDeque::new()]));
-            let closure_queue = msgs_queue.clone();
+            let mut device_vec = Vec::new();
+
+            for dev_key in state.device_pub_keys {
+                device_vec.push(Device::new(dev_key))
+            }
+
+            let devices: Devices = Arc::new(Mutex::new(device_vec));
+
+            let closure_devices = devices.clone();
 
             let recipient_sig = state.user_key.sign(state.user_id.as_bytes());
 
@@ -153,10 +180,15 @@ async fn main() -> Result<()> {
                         info!("pulling!");
                         //NOTE: this only works if adversary cannot observe the plaintext of the communication link between the enclave and the recipient
                         if msg.recipient == state.user_id {
-                            let mut queues = closure_queue.lock().await;
-                            for queue in queues.iter_mut() {
-                                queue.push_back(msg.clone());
+                            let mut device_vec = closure_devices.lock().await;
+                            for device in device_vec.iter_mut() {
+                                device.message_queue.push_back(msg.clone());
                             }
+                        }
+                    } else {
+                        let mut device_vec = closure_devices.lock().await;
+                        for device in device_vec.iter_mut() {
+                            device.dummy_messages += 1;
                         }
                     }
 
@@ -164,7 +196,7 @@ async fn main() -> Result<()> {
                 }
             });
 
-            let server = Proxy::new(msgs_queue).await?;
+            let server = Proxy::new(devices).await?;
 
             let resp = select! {
 

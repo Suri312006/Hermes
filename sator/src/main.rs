@@ -1,4 +1,4 @@
-use hello_world::{NewUserReq, user_service_client::UserServiceClient};
+use grpc::{NewUserReq, user_service_client::UserServiceClient};
 // use hello_world::{HelloRequest, greeter_client::GreeterClient};
 use hyper_util::rt::TokioIo;
 use tokio_vsock::{VsockAddr, VsockStream};
@@ -12,7 +12,7 @@ use tonic::IntoRequest;
 
 use bincode::serde::encode_to_vec;
 
-pub mod hello_world {
+pub mod grpc {
     tonic::include_proto!("hermes");
 }
 

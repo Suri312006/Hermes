@@ -1,200 +1,218 @@
-// use std::{
-//     fs::canonicalize, path::PathBuf, process::Command, str::FromStr, thread::sleep, time::Duration,
-// };
+use std::{
+    fs::canonicalize, path::PathBuf, process::Command, str::FromStr, thread::sleep, time::Duration,
+};
 
-// use criterion::{Criterion, criterion_group, criterion_main};
-// use tokio::runtime::Builder;
+use bincode::serde::encode_to_vec;
+use criterion::{Criterion, criterion_group, criterion_main};
+use ed25519_dalek::ed25519::signature::SignerMut;
+use rand_core::OsRng;
+use tokio::runtime::Builder;
 
-// use agora::{MSG_SIZE, SPARTA_PORT};
-// use grpc::{
-//     FetchReq, NewUserReq, Packet, message_service_client::MessageServiceClient,
-//     user_service_client::UserServiceClient,
-// };
-// use tonic::{IntoRequest, transport::Channel};
+use agora::{MSG_SIZE, TROJAN_BIND_ADDR, TROJAN_PORT};
+use grpc::{
+    FetchReq, NewUserReq, Packet, message_service_client::MessageServiceClient,
+    trojan_service_client::TrojanServiceClient, user_service_client::UserServiceClient,
+};
+use tonic::{IntoRequest, transport::Channel};
 
-// // mod grpc {
-// //     tonic::include_proto!("hermes");
-// // }
+mod grpc {
+    tonic::include_proto!("hermes");
+}
 
-// const WAIT_TIME: u64 = 8;
+const WAIT_TIME: u64 = 8;
 
-// async fn fetch_k(mut msg_client: MessageServiceClient<Channel>, user_id: String, k: i32) {
-//     let resp = msg_client
-//         .fetch(FetchReq {
-//             recipient: user_id,
-//             amount: k,
-//             sig: String::new(),
-//         })
-//         .await
-//         .unwrap();
-// }
+async fn fetch_k(
+    mut msg_client: TrojanServiceClient<Channel>,
+    user_id: String,
+    k: i32,
+    sig: Vec<u8>,
+) {
+    let resp = msg_client
+        .fetch(FetchReq {
+            recipient: user_id,
+            amount: k,
+            sig,
+        })
+        .await
+        .unwrap();
+}
 
-// async fn send(mut msg_client: MessageServiceClient<Channel>, user_id: String, body: Vec<u8>) {
-//     let resp = msg_client
-//         .send(Packet {
-//             recipient: user_id,
-//             body,
-//         })
-//         .await
-//         .unwrap();
-// }
-// fn fetch_benches(c: &mut Criterion) {
-//     let mut msg_client = None;
-//     let mut user = None;
+async fn send(mut msg_client: TrojanServiceClient<Channel>, user_id: String, body: Vec<u8>) {
+    let resp = msg_client
+        .send(Packet {
+            recipient: user_id,
+            body,
+        })
+        .await
+        .unwrap();
+}
+fn fetch_benches(c: &mut Criterion) {
+    let mut client = None;
+    let mut user = None;
 
-//     let mut runtime = Builder::new_current_thread().enable_all().build().unwrap();
+    let mut key = None;
 
-//     let mut handle = Command::new("cargo")
-//         .args(["run", "--release"])
-//         .current_dir(canonicalize(PathBuf::from_str("../sparta").unwrap()).unwrap())
-//         .spawn()
-//         .expect("Sparta failed to start!");
+    let mut runtime = Builder::new_current_thread().enable_all().build().unwrap();
 
-//     // wait for sparta to be up and availible
-//     sleep(Duration::from_secs(WAIT_TIME));
+    runtime.block_on(async {
+        let server_url = format!("http://{}:{}", TROJAN_BIND_ADDR, TROJAN_PORT);
 
-//     runtime.block_on(async {
-//         let server_url = format!("http://{}", SPARTA_PORT);
+        let mut i_client = TrojanServiceClient::connect(server_url.clone())
+            .await
+            .expect("Sparta must be running for this benchmark to operate.");
 
-//         let mut user_client = UserServiceClient::connect(server_url.clone())
-//             .await
-//             .expect("Sparta must be running for this benchmark to operate.");
-//         let mc = MessageServiceClient::connect(server_url.clone())
-//             .await
-//             .expect("Sparta must be running for this benchmark to operate.");
-//         msg_client = Some(mc.clone());
+        let mut rng = OsRng;
+        let signing_key = ed25519_dalek::SigningKey::generate(&mut rng);
+        let verifying_key = signing_key.verifying_key();
 
-//         let user_1 = user_client
-//             .create_user(NewUserReq {}.into_request())
-//             .await
-//             .unwrap()
-//             .into_inner();
-//         user = Some(user_1.id);
-//     });
+        let encoded_key = encode_to_vec(verifying_key, bincode::config::standard())
+            .expect("should have been able to encode it");
 
-//     let msg_client = &mut msg_client.unwrap();
-//     let user = user.unwrap();
+        let user_1 = i_client
+            .create_user(
+                NewUserReq {
+                    public_key: encoded_key,
+                }
+                .into_request(),
+            )
+            .await
+            .unwrap()
+            .into_inner();
+        user = Some(user_1.id);
+        client = Some(i_client);
+        key = Some(signing_key)
+    });
 
-//     let mut f = c.benchmark_group("Fetch");
+    let client = &mut client.unwrap();
+    let user = user.unwrap();
+    let mut key = key.unwrap();
 
-//     f.bench_function("K = 1", |b| {
-//         b.to_async(&runtime)
-//             .iter(async || fetch_k(msg_client.clone(), user.clone(), 1).await);
-//     });
+    let sig = key.sign(user.as_bytes());
+    let sig = sig.to_bytes().to_vec();
 
-//     f.bench_function("K = 10", |b| {
-//         b.to_async(&runtime)
-//             .iter(async || fetch_k(msg_client.clone(), user.clone(), 10).await);
-//     });
+    let mut f = c.benchmark_group("Fetch");
 
-//     f.bench_function("K = 100", |b| {
-//         b.to_async(&runtime)
-//             .iter(async || fetch_k(msg_client.clone(), user.clone(), 100).await);
-//     });
+    f.bench_function("K = 1", |b| {
+        b.to_async(&runtime)
+            .iter(async || fetch_k(client.clone(), user.clone(), 1, sig.clone()).await);
+    });
 
-//     f.bench_function("K = 1000", |b| {
-//         b.to_async(&runtime)
-//             .iter(async || fetch_k(msg_client.clone(), user.clone(), 1000).await);
-//     });
+    f.bench_function("K = 10", |b| {
+        b.to_async(&runtime)
+            .iter(async || fetch_k(client.clone(), user.clone(), 10, sig.clone()).await);
+    });
 
-//     let _ = handle.try_wait();
-//     handle.kill().unwrap();
-// }
+    f.bench_function("K = 100", |b| {
+        b.to_async(&runtime)
+            .iter(async || fetch_k(client.clone(), user.clone(), 100, sig.clone()).await);
+    });
 
-// fn send_benches(c: &mut Criterion) {
-//     let mut msg_client = None;
-//     let mut user = None;
+    f.bench_function("K = 1000", |b| {
+        b.to_async(&runtime)
+            .iter(async || fetch_k(client.clone(), user.clone(), 1000, sig.clone()).await);
+    });
+}
 
-//     let runtime = Builder::new_current_thread().enable_all().build().unwrap();
+fn send_benches(c: &mut Criterion) {
+    let mut client = None;
+    let mut user = None;
+    let mut key = None;
 
-//     let mut handle = Command::new("cargo")
-//         .args(["run", "--release"])
-//         .current_dir(canonicalize(PathBuf::from_str("../sparta").unwrap()).unwrap())
-//         .spawn()
-//         .expect("Sparta failed to start!");
+    let runtime = Builder::new_current_thread().enable_all().build().unwrap();
 
-//     // wait for sparta to be up and availible
-//     sleep(Duration::from_secs(WAIT_TIME));
+    // wait for sparta to be up and availible
+    sleep(Duration::from_secs(WAIT_TIME));
 
-//     runtime.block_on(async {
-//         let server_url = format!("http://{}", SPARTA_PORT);
+    runtime.block_on(async {
+        let server_url = format!("http://{}:{}", TROJAN_BIND_ADDR, TROJAN_PORT);
 
-//         let mut user_client = UserServiceClient::connect(server_url.clone())
-//             .await
-//             .expect("Sparta must be running for this benchmark to operate.");
-//         let mc = MessageServiceClient::connect(server_url.clone())
-//             .await
-//             .expect("Sparta must be running for this benchmark to operate.");
-//         msg_client = Some(mc.clone());
+        let mut i_client = TrojanServiceClient::connect(server_url.clone())
+            .await
+            .expect("Sparta must be running for this benchmark to operate.");
 
-//         let user_1 = user_client
-//             .create_user(NewUserReq {}.into_request())
-//             .await
-//             .unwrap()
-//             .into_inner();
-//         user = Some(user_1.id);
-//     });
+        let mut rng = OsRng;
+        let signing_key = ed25519_dalek::SigningKey::generate(&mut rng);
+        let verifying_key = signing_key.verifying_key();
 
-//     let mut s = c.benchmark_group("Send");
+        let encoded_key = encode_to_vec(verifying_key, bincode::config::standard())
+            .expect("should have been able to encode it");
 
-//     let msg_client = &mut msg_client.unwrap();
-//     let user = user.unwrap();
+        let user_1 = i_client
+            .create_user(
+                NewUserReq {
+                    public_key: encoded_key,
+                }
+                .into_request(),
+            )
+            .await
+            .unwrap()
+            .into_inner();
+        user = Some(user_1.id);
+        client = Some(i_client);
+        key = Some(signing_key)
+    });
+    let client = &mut client.unwrap();
+    let user = user.unwrap();
+    let mut key = key.unwrap();
 
-//     let mut message = Vec::from("MESSAGE");
-//     message.resize(MSG_SIZE, 0);
+    let sig = key.sign(user.as_bytes());
+    let sig = sig.to_bytes().to_vec();
 
-//     s.bench_function("K = 1", |b| {
-//         b.to_async(&runtime).iter(async || {
-//             send(msg_client.clone(), user.clone(), message.clone()).await;
-//         });
-//     });
+    let mut s = c.benchmark_group("Send");
 
-//     let _ = handle.try_wait();
-//     handle.kill().unwrap();
-// }
+    let mut message = Vec::from("MESSAGE");
+    message.resize(MSG_SIZE, 0);
 
-// async fn create_user(mut user_client: UserServiceClient<Channel>) {
-//     let _ = user_client
-//         .create_user(NewUserReq {}.into_request())
-//         .await
-//         .unwrap()
-//         .into_inner();
-// }
+    s.bench_function("K = 1", |b| {
+        b.to_async(&runtime).iter(async || {
+            send(client.clone(), user.clone(), message.clone()).await;
+        });
+    });
+}
 
-// fn user_benches(c: &mut Criterion) {
-//     let mut user_client = None;
+async fn create_user(mut user_client: TrojanServiceClient<Channel>) {
+    let mut rng = OsRng;
+    let signing_key = ed25519_dalek::SigningKey::generate(&mut rng);
+    let verifying_key = signing_key.verifying_key();
 
-//     let mut handle = Command::new("cargo")
-//         .args(["run", "--release"])
-//         .current_dir(canonicalize(PathBuf::from_str("../sparta").unwrap()).unwrap())
-//         .spawn()
-//         .expect("Sparta failed to start!");
+    let encoded_key = encode_to_vec(verifying_key, bincode::config::standard())
+        .expect("should have been able to encode it");
 
-//     // wait for sparta to be up and availible
-//     sleep(Duration::from_secs(WAIT_TIME));
+    let _ = user_client
+        .create_user(
+            NewUserReq {
+                public_key: encoded_key,
+            }
+            .into_request(),
+        )
+        .await
+        .unwrap()
+        .into_inner();
+}
 
-//     let runtime = Builder::new_current_thread().enable_all().build().unwrap();
+fn user_benches(c: &mut Criterion) {
+    let mut user_client = None;
 
-//     runtime.block_on(async {
-//         let server_url = format!("http://{}", SPARTA_PORT);
+    let runtime = Builder::new_current_thread().enable_all().build().unwrap();
 
-//         let uc = UserServiceClient::connect(server_url.clone())
-//             .await
-//             .expect("Sparta must be running for this benchmark to operate.");
-//         user_client = Some(uc);
-//     });
+    runtime.block_on(async {
+        let server_url = format!("http://{}:{}", TROJAN_BIND_ADDR, TROJAN_PORT);
 
-//     let mut u = c.benchmark_group("User");
-//     let user_client = user_client.expect("User Client should be instantiated");
+        let uc = TrojanServiceClient::connect(server_url.clone())
+            .await
+            .expect("Sparta must be running for this benchmark to operate.");
+        user_client = Some(uc);
+    });
 
-//     u.bench_function("Create User", |b| {
-//         b.to_async(&runtime).iter(async || {
-//             create_user(user_client.clone()).await;
-//         });
-//     });
-//     let _ = handle.try_wait();
-//     handle.kill().unwrap();
-// }
+    let mut u = c.benchmark_group("User");
+    let user_client = user_client.expect("User Client should be instantiated");
 
-// criterion_group!(benches, fetch_benches, send_benches, user_benches);
-// criterion_main!(benches);
+    u.bench_function("Create User", |b| {
+        b.to_async(&runtime).iter(async || {
+            create_user(user_client.clone()).await;
+        });
+    });
+}
+
+criterion_group!(benches, fetch_benches, send_benches, user_benches);
+criterion_main!(benches);

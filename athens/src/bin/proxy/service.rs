@@ -10,18 +10,20 @@ use log::error;
 use tokio::sync::Mutex;
 use tonic::{Request, Response, Status, async_trait, transport::Channel};
 
+use crate::Devices;
+
 pub struct ProxyServer {
-    messages_vec: Arc<Mutex<Vec<VecDeque<Packet>>>>,
+    devices: Devices,
     trojan_client: Arc<Mutex<TrojanServiceClient<Channel>>>, // sparta_client: Arc<Mutex<MessageServiceClient<Channel>>>,
 }
 
 impl ProxyServer {
-    pub async fn new(messages_vec: Arc<Mutex<Vec<VecDeque<Packet>>>>) -> Result<Self> {
+    pub async fn new(devices: Devices) -> Result<Self> {
         let server_url = format!("http://{}:{}", TROJAN_IP, TROJAN_PORT);
 
         let trojan_client = TrojanServiceClient::connect(server_url).await?;
         Ok(ProxyServer {
-            messages_vec,
+            devices,
             trojan_client: Arc::new(Mutex::new(trojan_client)),
         })
     }
@@ -57,12 +59,23 @@ impl ProxyService for ProxyServer {
                 Status::internal("dw about it")
             })?;
 
-        let mut msg_queue = self.messages_vec.lock().await;
+        let mut devices = self.devices.lock().await;
 
         let mut ret = Vec::new();
 
-        while let Some(msg) = msg_queue.get_mut(dev_id).unwrap().pop_front() {
+        let device = devices.get_mut(dev_id).expect("device should exist");
+
+        while let Some(msg) = device.message_queue.pop_front() {
             ret.push(msg);
+        }
+
+        while device.dummy_messages > 0 {
+            ret.push(Packet {
+                recipient: "dummy".to_string(),
+                body: Vec::new(),
+            });
+
+            device.dummy_messages -= 1;
         }
 
         //TODO: limit how many "large" requests can be sent.
