@@ -12,4 +12,7 @@ trojan:
     docker build -f trojan.Dockerfile -t trojan .
     docker run -it -p 50051:50051 --device=/dev/vsock --security-opt seccomp=unconfined trojan
 
+kill:
+    nitro-cli terminate-enclave --all
+    docker kill $(docker ps -q)
 
