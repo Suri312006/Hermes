@@ -237,3 +237,42 @@ pub fn chart() -> Chart {
     //         .data(vec![180, 232, 210, 290, 250, 400, 370]),
     // )
 }
+
+// msg_dg: 2^20
+//
+// Gnuplot not found, using plotters backend
+// Fetch/K = 1             time:   [20.399 ms 20.407 ms 20.415 ms]
+//                         change: [-0.0691% -0.0094% +0.0528%] (p = 0.76 > 0.05)
+//                         No change in performance detected.
+// Found 1 outliers among 100 measurements (1.00%)
+//   1 (1.00%) high mild
+// Benchmarking Fetch/K = 10: Warming up for 3.0000 s
+// Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 8.2s, or reduce sample count to 60.
+// Fetch/K = 10            time:   [81.209 ms 81.443 ms 81.843 ms]
+// Found 1 outliers among 100 measurements (1.00%)
+//   1 (1.00%) high severe
+// Benchmarking Fetch/K = 100: Warming up for 3.0000 s
+// Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 68.6s, or reduce sample count to 10.
+// Fetch/K = 100           time:   [684.66 ms 685.09 ms 685.42 ms]
+// Found 5 outliers among 100 measurements (5.00%)
+//   2 (2.00%) low severe
+//   2 (2.00%) high mild
+//   1 (1.00%) high severe
+// Benchmarking Fetch/K = 1000: Warming up for 3.0000 s
+// Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 671.9s, or reduce sample count to 10.
+// Fetch/K = 1000          time:   [6.6663 s 6.6787 s 6.6906 s]
+// Found 3 outliers among 100 measurements (3.00%)
+//   3 (3.00%) low mild
+
+// Send/K = 1              time:   [7.8683 ms 7.8764 ms 7.8849 ms]
+// Found 6 outliers among 100 measurements (6.00%)
+//   5 (5.00%) high mild
+//   1 (1.00%) high severe
+
+// User/Create User        time:   [5.7503 ms 5.7540 ms 5.7577 ms]
+// Found 9 outliers among 100 measurements (9.00%)
+//   1 (1.00%) low severe
+//   4 (4.00%) low mild
+//   4 (4.00%) high mild
+//
+// 
