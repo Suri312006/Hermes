@@ -12,6 +12,7 @@
   bibliography: bibliography("refs.bib"),
 )
 
+
 // Introduction. Describe the problem, discuss attacks that lead to your solution, discuss prior works
 // that provide a solution for the same problem, potential applications of these works, get inspired by
 // the papers given to you.
@@ -19,7 +20,17 @@
 
 = Introduction
 
- 
+With the threat of a global adversary looming over online communication, its becoming a more pressing concern
+to have secure, relaible, messaging services. We came up with E2E encryption to protect the contents of our
+messages, but its not enough to protect against a global adversary. E2E encryption doesnt hide the metadata of
+our conversations, as the adversary can still reconstruct who is talking to who, and when. As former NSA Chief Gen. Michael
+Hayden said, "The U.S. government kills people based on metadata" #cite()
+
+The SPARTA construction offers a metadata-private anonymous communication system, and for the first part of my project
+it'll detail the implementation of SPARTA-LL. After initially reading the Groove paper, which has support
+for users to have multiple devices via a untrusted provider, it inspired me to try incorporating similar
+functionality into my project. Additionally I've been able to get my SPARTA implementation running
+inside an AWS Nitro Enclave!   
 
 // Technical Sections. Describe the methods, algorithms, or formal results related to your project
 // as precisely and concisely as you can. Generously use examples for clarity.
