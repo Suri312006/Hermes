@@ -204,10 +204,10 @@ impl MessageService for MessageServer {
                     .map_err(|_| Status::internal("something went wrong"))?;
 
             let mut sig_buf = [0_u8; 64];
-            if req.sig.as_bytes().len() != 64 {
+            if req.sig.len() != 64 {
                 return Err(Status::invalid_argument("Bad Signature"));
             }
-            sig_buf.copy_from_slice(req.sig.as_bytes());
+            sig_buf.copy_from_slice(req.sig.as_slice());
 
             let sig = Signature::from_bytes(&sig_buf);
 
