@@ -23,8 +23,7 @@ pub const MSG_SIZE: usize =
 pub const TROJAN_BIND_ADDR: &str = "0.0.0.0";
 
 pub const TROJAN_PORT: &str = "50051";
-
-pub const TROJAN_IP: &str = "52.53.175.2";
+pub const TROJAN_IP: &str = "13.52.102.59";
 
 pub const SPARTA_VSOCK_CID: u32 = 16;
 pub const SPARTA_VSOCK_PORT: u32 = 50051;

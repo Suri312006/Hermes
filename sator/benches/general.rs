@@ -21,15 +21,10 @@ mod grpc {
 
 const WAIT_TIME: u64 = 8;
 
-async fn fetch_k(
-    mut msg_client: TrojanServiceClient<Channel>,
-    user_id: String,
-    k: i32,
-    sig: Vec<u8>,
-) {
+async fn fetch_k(mut msg_client: TrojanServiceClient<Channel>, user_id: u64, k: i32, sig: Vec<u8>) {
     let resp = msg_client
         .fetch(FetchReq {
-            recipient: user_id,
+            recipient: user_id.to_string(),
             amount: k,
             sig,
         })
@@ -37,10 +32,10 @@ async fn fetch_k(
         .unwrap();
 }
 
-async fn send(mut msg_client: TrojanServiceClient<Channel>, user_id: String, body: Vec<u8>) {
+async fn send(mut msg_client: TrojanServiceClient<Channel>, user_id: u64, body: Vec<u8>) {
     let resp = msg_client
         .send(Packet {
-            recipient: user_id,
+            recipient: user_id.to_string(),
             body,
         })
         .await
@@ -84,32 +79,32 @@ fn fetch_benches(c: &mut Criterion) {
     });
 
     let client = &mut client.unwrap();
-    let user = user.unwrap();
+    let user = user.unwrap().parse::<u64>().expect("should be valid u64");
     let mut key = key.unwrap();
 
-    let sig = key.sign(user.as_bytes());
+    let sig = key.sign(&user.to_le_bytes());
     let sig = sig.to_bytes().to_vec();
 
     let mut f = c.benchmark_group("Fetch");
 
     f.bench_function("K = 1", |b| {
         b.to_async(&runtime)
-            .iter(async || fetch_k(client.clone(), user.clone(), 1, sig.clone()).await);
+            .iter(async || fetch_k(client.clone(), user, 1, sig.clone()).await);
     });
 
     f.bench_function("K = 10", |b| {
         b.to_async(&runtime)
-            .iter(async || fetch_k(client.clone(), user.clone(), 10, sig.clone()).await);
+            .iter(async || fetch_k(client.clone(), user, 10, sig.clone()).await);
     });
 
     f.bench_function("K = 100", |b| {
         b.to_async(&runtime)
-            .iter(async || fetch_k(client.clone(), user.clone(), 100, sig.clone()).await);
+            .iter(async || fetch_k(client.clone(), user, 100, sig.clone()).await);
     });
 
     f.bench_function("K = 1000", |b| {
         b.to_async(&runtime)
-            .iter(async || fetch_k(client.clone(), user.clone(), 1000, sig.clone()).await);
+            .iter(async || fetch_k(client.clone(), user, 1000, sig.clone()).await);
     });
 }
 
@@ -152,10 +147,10 @@ fn send_benches(c: &mut Criterion) {
         key = Some(signing_key)
     });
     let client = &mut client.unwrap();
-    let user = user.unwrap();
+    let user = user.unwrap().parse::<u64>().expect("should be valid u64");
     let mut key = key.unwrap();
 
-    let sig = key.sign(user.as_bytes());
+    let sig = key.sign(&user.to_le_bytes());
     let sig = sig.to_bytes().to_vec();
 
     let mut s = c.benchmark_group("Send");

@@ -35,7 +35,7 @@ https://github.com/fortanix/rust-sgx/issues/401
 	- `nitro-cli run-enclave --eif-path sparta.eif --cpu-count 2 --memory 4096 --debug-mode --enclave-cid 16`
 	- `nitro-cli run-enclave --eif-path nitroxum.eif --cpu-count 2 --memory 4096 --debug-mode --enclave-cid 16`
 	- `docker run -d -p 8080:8080 --name socat alpine/socat tcp-listen:8080,fork,reuseaddr vsock-connect:16:8080`
-  - `docker run -it --device=/dev/vsock --security-opt seccomp=unconfined trojan`
+  - `docker run -it -p 50051:50051 --device=/dev/vsock --security-opt seccomp=unconfined trojan`
 == Post MVP
 - [ ] multi-device support via support of proxy
 	- inspired by how groovy had the provider system
