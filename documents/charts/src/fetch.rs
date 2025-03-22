@@ -378,3 +378,49 @@ pub fn chart() -> Chart {
 //   2 (2.00%) low mild
 //   1 (1.00%) high mild
 //   4 (4.00%) high severe
+//
+//
+//
+// msg_db_size: 2^17
+//
+//      Running benches/general.rs (/home/ec2-user/Hermes/target/release/deps/general-9ad382a0b3217084)
+// Gnuplot not found, using plotters backend
+// Fetch/K = 1             time:   [21.930 ms 21.939 ms 21.948 ms]
+//                         change: [+1.0854% +1.1308% +1.1795%] (p = 0.00 < 0.05)
+//                         Performance has regressed.
+// Benchmarking Fetch/K = 10: Warming up for 3.0000 s
+// Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 5.4s, or reduce sample count to 90.
+// Fetch/K = 10            time:   [54.174 ms 54.193 ms 54.212 ms]
+//                         change: [+4.5633% +4.6120% +4.6651%] (p = 0.00 < 0.05)
+//                         Performance has regressed.
+// Found 3 outliers among 100 measurements (3.00%)
+//   3 (3.00%) high mild
+// Benchmarking Fetch/K = 100: Warming up for 3.0000 s
+// Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 37.6s, or reduce sample count to 10.
+// Fetch/K = 100           time:   [375.65 ms 375.73 ms 375.82 ms]
+//                         change: [+6.6975% +6.7349% +6.7754%] (p = 0.00 < 0.05)
+//                         Performance has regressed.
+// Found 1 outliers among 100 measurements (1.00%)
+//   1 (1.00%) high severe
+// Benchmarking Fetch/K = 1000: Warming up for 3.0000 s
+// Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 358.2s, or reduce sample count to 10.
+// Fetch/K = 1000          time:   [3.5850 s 3.5853 s 3.5855 s]
+//                         change: [+6.9412% +7.0570% +7.2235%] (p = 0.00 < 0.05)
+//                         Performance has regressed.
+// Found 3 outliers among 100 measurements (3.00%)
+//   3 (3.00%) low mild
+
+// Send/K = 1              time:   [9.4871 ms 9.4907 ms 9.4942 ms]
+//                         change: [+2.2144% +2.3049% +2.3886%] (p = 0.00 < 0.05)
+//                         Performance has regressed.
+// Found 2 outliers among 100 measurements (2.00%)
+//   2 (2.00%) low mild
+
+// User/Create User        time:   [8.0717 ms 8.0758 ms 8.0798 ms]
+//                         change: [-0.1424% -0.0660% +0.0180%] (p = 0.10 > 0.05)
+//                         No change in performance detected.
+// Found 6 outliers among 100 measurements (6.00%)
+//   2 (2.00%) low severe
+//   1 (1.00%) low mild
+//   2 (2.00%) high mild
+//   1 (1.00%) high severe

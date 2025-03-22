@@ -167,6 +167,11 @@ between the device and the proxy.
   chose this form of authentication as its reminiscent of ssh and was also relatively easy to implement.
   The authentication layer can be changed out for any other scheme as well.
 
+  Sends can be sent from a device or through a proxy, but its currently implemented such that
+  any sends are implemented by the 
+
+  #figure(image("arch.jpg", height: 50%), caption: [Architecture diagram of Multi-Device SPARTA])
+
 // Experiments. Include setup details (e.g., what machine you used), results presented in tables or
 // figures, and observations. Always comment on your results. What should we take away from them?
 = Experiments and Results
@@ -174,5 +179,13 @@ All experiments were ran on an AWS m5.xlarge with the ami-04acda42f3629e02b imag
 base os image. The user store was set to a size of 256 for all tests. 
 
 = Conclusion and Future Work
+The multi-device proxy for SPARTA makes meta-data private communication one step
+closer towards practicality, allowing users to have multiple devices. However
+there is still a lot to make this project a deployable instance of SPARTA. As mentioned
+ealier, TLS needs to be integrated into the core SPARTA server, End 2 End encryption
+protocols need to be built into the client side programs, and there is currently no address
+book to hold a users contacts. 
+
+
 // Conclusion. This should be short with the goal to remind the reader of the points that you think
 // are the most important.
