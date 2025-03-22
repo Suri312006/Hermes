@@ -22,14 +22,15 @@ Note: If you have any trouble with the following instructions, please email me a
 
 1. Create an AWS Nitro EC2 instance
 
-	`
-	aws ec2 run-instances \
-  --image-id ami-04acda42f3629e02b \
-  --count 1 \
-  --instance-type m5.xlarge \
-  --key-name <Your key name here> \
-  --enclave-options 'Enabled=true' \
-  `
+	```bash
+	aws ec2 run-instances \\
+  --image-id ami-04acda42f3629e02b \\
+  --count 1 \\
+  --instance-type m5.xlarge \\
+  --key-name <Your key name here> \\
+  --enclave-options 'Enabled=true' \\
+  ```
+
  Here are the <a href="https://docs.aws.amazon.com/cli/v1/userguide/cli-services-ec2-instances.html">AWS docs</a>
 
 2. Expand the root partition of your EC2 instance to atleast 32GB. (Probably want to use the console for this)
@@ -45,6 +46,7 @@ traffic coming from anywhere, also probably on port 22 to allow for ssh.
  Here are the <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-connect-methods.html">AWS docs</a>
 
 3. Install the Just command runner
+
   ```bash
   # create ~/bin
   mkdir -p ~/bin
