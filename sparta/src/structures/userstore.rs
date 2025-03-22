@@ -142,6 +142,8 @@ impl UserStoreInner {
             chosen = oblivious_select(condition, addr, chosen);
         }
 
+        debug!("chosen addr:{}", chosen);
+
         let head = rand_address();
 
         if pub_key.len() != PUB_KEY_SIZE {
