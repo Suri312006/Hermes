@@ -23,12 +23,7 @@ Note: If you have any trouble with the following instructions, please email me a
 1. Create an AWS Nitro EC2 instance
 
 	```bash
-	aws ec2 run-instances \\
-  --image-id ami-04acda42f3629e02b \\
-  --count 1 \\
-  --instance-type m5.xlarge \\
-  --key-name <Your key name here> \\
-  --enclave-options 'Enabled=true' \\
+	aws ec2 run-instances --image-id ami-04acda42f3629e02b  --count 1  --instance-type m5.xlarge  --key-name \<Your key name here\>  --enclave-options "Enabled=true"
   ```
 
  Here are the <a href="https://docs.aws.amazon.com/cli/v1/userguide/cli-services-ec2-instances.html">AWS docs</a>
