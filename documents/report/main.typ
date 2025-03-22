@@ -168,9 +168,9 @@ between the device and the proxy.
   The authentication layer can be changed out for any other scheme as well.
 
   Sends can be sent from a device or through a proxy, but its currently implemented such that
-  any sends are implemented by the 
+  any sends from a client device are routed through the proxy, mostly for simplicity.
 
-  #figure(image("arch.jpg", height: 50%), caption: [Architecture diagram of Multi-Device SPARTA])
+  #figure(image("arch.jpg", height: 45%), caption: [Architecture diagram of Multi-Device SPARTA])
 
 // Experiments. Include setup details (e.g., what machine you used), results presented in tables or
 // figures, and observations. Always comment on your results. What should we take away from them?
