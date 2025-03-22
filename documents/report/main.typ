@@ -41,13 +41,20 @@ synchronous system, requiring and limited to one message per round. Additionally
 the latencies are in the order of epoch times, with a really complex architecture
 due to the underlying mixnets to route messages.
 
-The SPARTA #cite(<sparta>) construction offers a metadata-private anonymous communication
+The SPARTA #cite(<sparta>) construction offers a metadata-private, anonymous communication
 system, and for the first part of my project it'll detail the implementation
 of SPARTA-LL. Then, taking inspiration from Groove, I wanted to add multi-device
 functionality to SPARTA. Additionally I've been able to get my SPARTA
 implementation running inside an AWS Nitro Enclave!
 
 == Threat Model
+We inherit the threat model presented by the original SPARTA paper. The adversary is a global
+active attacker with the following capabilities. 
+
+- control / modify all network links
+- participate in the protocol
+- observe traffic for an arbitrary amount of time
+- can breach everything on the server excluding the enclave code
 
 // Technical Sections. Describe the methods, algorithms, or formal results related to your project
 // as precisely and concisely as you can. Generously use examples for clarity.
@@ -98,7 +105,6 @@ underlying oram data structure.
   take way too long to get correct, ecpecially as the only person working on this
   project.
   
-
 //TODO: just do this later bro
 
 == Technical Details
@@ -143,13 +149,29 @@ notion of traffic analysis resistance as the adversary now knows precicely how m
 traffic there is per client, simply by observing the proxy's response to client fetch
 requests.
 
+This notion of the proxy sending the client real messages, and then dummy messages to fill in
+the volume of messages that have been fetched, can be seen as an extension of deffered retreival
+between the device and the proxy.
 
+// what else
 
+== Implementation details
+  The proxy is implemented as a GRPC server that interally has a client connected to Trojan. It
+  spawns a thread to fetch from SPARTA with the granularity specified by cli arguments, and
+  then the server takes care of responding to client requests.
+
+  Additionally, the proxy has an authentication
+  layer to ensure that any requests made are coming from verified devices, whose public keys
+  have been stored on the proxy ahead of time. The proxy then verifies the requests's signature
+  with its stored public key, and will only process the request if the verification succeeds. I
+  chose this form of authentication as its reminiscent of ssh and was also relatively easy to implement.
+  The authentication layer can be changed out for any other scheme as well.
 
 // Experiments. Include setup details (e.g., what machine you used), results presented in tables or
 // figures, and observations. Always comment on your results. What should we take away from them?
 = Experiments and Results
-All experiments were ran on an AWS 
+All experiments were ran on an AWS m5.xlarge with the ami-04acda42f3629e02b image id for the
+base os image. The user store was set to a size of 256 for all tests. 
 
 = Conclusion and Future Work
 // Conclusion. This should be short with the goal to remind the reader of the points that you think
