@@ -282,3 +282,50 @@ pub fn chart() -> Chart {
 //   3 (3.00%) low mild
 //   4 (4.00%) high mild
 //   1 (1.00%) high severe
+//
+// msg_db_size: 2^15
+//      Running benches/general.rs (/home/ec2-user/Hermes/target/release/deps/general-9ad382a0b3217084)
+// Gnuplot not found, using plotters backend
+// Fetch/K = 1             time:   [21.545 ms 21.559 ms 21.569 ms]
+//                         change: [+0.5678% +0.6393% +0.6952%] (p = 0.00 < 0.05)
+//                         Change within noise threshold.
+// Found 1 outliers among 100 measurements (1.00%)
+//   1 (1.00%) low severe
+// Benchmarking Fetch/K = 10: Warming up for 3.0000 s
+// Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 5.1s, or reduce sample count to 90.
+// Fetch/K = 10            time:   [50.428 ms 50.441 ms 50.454 ms]
+//                         change: [+1.1547% +1.2133% +1.2758%] (p = 0.00 < 0.05)
+//                         Performance has regressed.
+// Found 2 outliers among 100 measurements (2.00%)
+//   2 (2.00%) high mild
+// Benchmarking Fetch/K = 100: Warming up for 3.0000 s
+// Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 33.9s, or reduce sample count to 10.
+// Fetch/K = 100           time:   [338.56 ms 338.64 ms 338.72 ms]
+//                         change: [+2.0238% +2.0592% +2.0922%] (p = 0.00 < 0.05)
+//                         Performance has regressed.
+// Found 4 outliers among 100 measurements (4.00%)
+//   4 (4.00%) low mild
+// Benchmarking Fetch/K = 1000: Warming up for 3.0000 s
+// Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 322.2s, or reduce sample count to 10.
+// Fetch/K = 1000          time:   [3.2173 s 3.2177 s 3.2181 s]
+//                         change: [+2.1579% +2.1737% +2.1908%] (p = 0.00 < 0.05)
+//                         Performance has regressed.
+// Found 6 outliers among 100 measurements (6.00%)
+//   3 (3.00%) low severe
+//   2 (2.00%) low mild
+//   1 (1.00%) high mild
+
+// Send/K = 1              time:   [9.1228 ms 9.1274 ms 9.1318 ms]
+//                         change: [+0.8406% +0.9080% +0.9837%] (p = 0.00 < 0.05)
+//                         Change within noise threshold.
+// Found 3 outliers among 100 measurements (3.00%)
+//   2 (2.00%) low mild
+//   1 (1.00%) high mild
+
+// User/Create User        time:   [8.0656 ms 8.0698 ms 8.0737 ms]
+//                         change: [-0.9009% -0.2119% +0.1685%] (p = 0.68 > 0.05)
+//                         No change in performance detected.
+// Found 4 outliers among 100 measurements (4.00%)
+//   2 (2.00%) low severe
+//   1 (1.00%) low mild
+//   1 (1.00%) high mild

@@ -22,10 +22,10 @@ https://github.com/fortanix/rust-sgx/issues/401
 - [x] user server implementation to create new user
 - [x] figure out how adding a user works (OMAP semantics)
 - [x] In the omap, make `get_data` and `update_data` have a similar trace.
-- [ ] have a simple client side impl, preferably on pc / cli
+- [x] have a simple client side impl, preferably on pc / cli
 - [ ] Nice documentation for everything
 - [ ] End 2 End encryption
-- [ ] Discuss the implementation of the Facebook ORAM library
+- [x] Discuss the implementation of the Facebook ORAM library
 - [ ] performance discrepancy possibly due to hardware im running on
 - [x] aws nitro enclaves https://dev.to/bendecoste/running-an-http-server-with-aws-nitro-enclaves-elo
 	- https://docs.aws.amazon.com/enclaves/latest/user/getting-started.html

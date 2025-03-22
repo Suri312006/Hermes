@@ -93,7 +93,10 @@ underlying oram data structure.
   The oblivious map used for the userstore is a custom construction thats not as efficient
   as state of the art. It boasts a time complexity of  $O(N log(N))$, as it iterates
   through every element in the allocated oram. It's akin to the LinearTime Oram in the
-  Facebook oram library.
+  Facebook oram library. I implemented it this way because its really simple and
+  trying to go for an Oblix #cite(<oblix>) or Wang #cite(<wang>) style OMAP would
+  take way too long to get correct, ecpecially as the only person working on this
+  project.
   
 
 //TODO: just do this later bro
@@ -109,27 +112,45 @@ are a few holes that need to be cleaned up for it to be a deployable instance of
   ensuring that any client and SPARTA have a secure channel for communication. It would
   require to move the core logic and state out of the GRPC server and instead wrap it
   with a HTTP server, and then proxy the traffic via NGINX as described #link("https://aws.amazon.com/about-aws/whats-new/2020/10/announcing-aws-certificate-manager-for-nitro-enclaves/")[#text(fill: blue)[here]].
-  Currently there is a custom, insecure,  GRPC proxy, called Trojan that wraps around the SPARTA
-  vsock and enables the exchange of traffic between SPARTA and clients.
 
+Currently there is a custom, insecure,  GRPC proxy, called Trojan that wraps around the SPARTA
+vsock and enables the exchange of traffic between SPARTA and clients. I originally chose
+GRPC as the protocol as its highly efficient with serialization and deserialization and
+generally has better DX compared to HTTP. 
   
-  
-
-
-
 = Multi-Device Extension
 // Implementation. Focus on the key design decisions in your code. Do not paste your source code
 // (unless you think it is necessary for some reason); summarize how it works.
-//
-//
-// 
+
+I propose a multi-device extension to SPARTA, via a trusted proxy on the
+client side. This trusted proxy would be responsible for fetching said clients
+messages from sparta on a configurable interval, and making a copy of each real
+message, as well as the number of dummy messages that each device would have
+received. Then the clients devices would fetch the messaages they need, when
+ever they please from this trusted proxy. This would reduce the bandwidth
+requirement for a mobile device / other low power devices to zero when not
+in use.
+
+The key idea is that the proxy would
+send the messages stored for that specific device, as well as the number of dummy
+messages that would have been received for that device. We need to send these
+dummy messages since the threat model describes an adversary who can monitor all network
+links. If we assume that the proxy doesnt send any dummy messages and the
+adversary observers a clients device pinging the proxy, which then returns
+a small datagram, the adversary can infer that the client hasnt received much traffic
+between the last time they fetched compared to now. This leakage would break the
+notion of traffic analysis resistance as the adversary now knows precicely how much real
+traffic there is per client, simply by observing the proxy's response to client fetch
+requests.
+
+
+
+
 // Experiments. Include setup details (e.g., what machine you used), results presented in tables or
 // figures, and observations. Always comment on your results. What should we take away from them?
 = Experiments and Results
-//
-//
-//
-// 
-= Conclusion
+All experiments were ran on an AWS 
+
+= Conclusion and Future Work
 // Conclusion. This should be short with the goal to remind the reader of the points that you think
 // are the most important.
