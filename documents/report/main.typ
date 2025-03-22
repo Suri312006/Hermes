@@ -2,7 +2,7 @@
 #import "@preview/algo:0.3.6": algo, i, d, comment, code
 #import "@preview/ieee-monolith:0.1.0": ieee
 #show: ieee.with(
-  title: [Hermes \ Building a practical multi-device  SPARTA],
+  title: [Hermes \ A Practical Multi-Device  SPARTA],
   authors: (
     (
       name: "Surendra Jammishetti",
@@ -47,6 +47,8 @@ of SPARTA-LL. Then, taking inspiration from Groove, I wanted to add multi-device
 functionality to SPARTA. Additionally I've been able to get my SPARTA
 implementation running inside an AWS Nitro Enclave!
 
+== Threat Model
+
 // Technical Sections. Describe the methods, algorithms, or formal results related to your project
 // as precisely and concisely as you can. Generously use examples for clarity.
 = Base Sparta
@@ -55,7 +57,7 @@ For the core implementation of SPARTA, I followed the pseudocode provided in the
 Since an oram is required for all of SPARTA's internal data structures, I used
 #link("https://github.com/facebook/oram/tree/main")[#text(fill: blue)[Facebook's implementation]].
 
-== Facebook PathORAM discussion
+== Facebook Oram discussion
 
 The facebook PathORAM implementation requires two things to be cryptographically secure;
 oram clients are running in a secure enclave architecture, that also provides memory
@@ -89,28 +91,30 @@ underlying oram data structure.
 + Oblivious Map
 
   The oblivious map used for the userstore is a custom construction thats not as efficient
-  as state of the art. It boasts a time complexity of  $O(N log(N))$, and operates on the following
-  pseudocode.
-
+  as state of the art. It boasts a time complexity of  $O(N log(N))$, as it iterates
+  through every element in the allocated oram. It's akin to the LinearTime Oram in the
+  Facebook oram library.
   
-#algo(
-  title: "UpdateData",
-  parameters: ($r: "Recipient(u64)"$,$u: "UserData(head: u64, tail: u64)"$, $o: "Op({Write, Read})"$),
-  block-align: none,
-  fill: white,
-    // stroke: stroke(thickness:0pt)
-)[
-
-for $a$ in {0, 1, USER_MAX_SIZE}: #i\ 
 
 //TODO: just do this later bro
 
+== Technical Details
+The core of the sparta server is a GRPC server that binds to a virtual socket inside of
+an AWS Nitro Enclave. As the enclave implementation was only done in the past week, there
+are a few holes that need to be cleaned up for it to be a deployable instance of SPARTA.
+
++ TLS
+
+  Amazon has support for enclave traffic to be encrypted via TLS from inside the enclave,
+  ensuring that any client and SPARTA have a secure channel for communication. It would
+  require to move the core logic and state out of the GRPC server and instead wrap it
+  with a HTTP server, and then proxy the traffic via NGINX as described #link("https://aws.amazon.com/about-aws/whats-new/2020/10/announcing-aws-certificate-manager-for-nitro-enclaves/")[#text(fill: blue)[here]].
+  Currently there is a custom, insecure,  GRPC proxy, called Trojan that wraps around the SPARTA
+  vsock and enables the exchange of traffic between SPARTA and clients.
+
+  
   
 
-  $"PathORAM" <- "PathORAM"."new"(M)$ #comment[ connect and initialize PathORAM on the server]\
-  zeroth $<-$ UniformRandom($0...M$)\
-  return PathORAM, zeroth
-]
 
 
 = Multi-Device Extension

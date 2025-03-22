@@ -237,3 +237,48 @@ pub fn chart() -> Chart {
     //         .data(vec![180, 232, 210, 290, 250, 400, 370]),
     // )
 }
+
+// msg_db_size: 2^14
+//      Running benches/general.rs (/home/ec2-user/Hermes/target/release/deps/general-9ad382a0b3217084)
+// Gnuplot not found, using plotters backend
+// Fetch/K = 1             time:   [21.417 ms 21.422 ms 21.427 ms]
+//                         change: [-8.0889% -8.0520% -8.0159%] (p = 0.00 < 0.05)
+//                         Performance has improved.
+// Found 3 outliers among 100 measurements (3.00%)
+//   1 (1.00%) low mild
+//   2 (2.00%) high mild
+// Fetch/K = 10            time:   [49.810 ms 49.836 ms 49.864 ms]
+//                         change: [-26.698% -26.640% -26.584%] (p = 0.00 < 0.05)
+//                         Performance has improved.
+// Found 4 outliers among 100 measurements (4.00%)
+//   4 (4.00%) high mild
+// Benchmarking Fetch/K = 100: Warming up for 3.0000 s
+// Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 33.2s, or reduce sample count to 10.
+// Fetch/K = 100           time:   [331.74 ms 331.81 ms 331.90 ms]
+//                         change: [-35.137% -35.118% -35.098%] (p = 0.00 < 0.05)
+//                         Performance has improved.
+// Found 3 outliers among 100 measurements (3.00%)
+//   1 (1.00%) high mild
+//   2 (2.00%) high severe
+// Benchmarking Fetch/K = 1000: Warming up for 3.0000 s
+// Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 315.1s, or reduce sample count to 10.
+// Fetch/K = 1000          time:   [3.1489 s 3.1492 s 3.1495 s]
+//                         change: [-36.249% -36.172% -36.071%] (p = 0.00 < 0.05)
+//                         Performance has improved.
+// Found 4 outliers among 100 measurements (4.00%)
+//   1 (1.00%) low severe
+//   3 (3.00%) high mild
+
+// Send/K = 1              time:   [9.0410 ms 9.0452 ms 9.0496 ms]
+//                         change: [-16.373% -16.296% -16.224%] (p = 0.00 < 0.05)
+//                         Performance has improved.
+// Found 1 outliers among 100 measurements (1.00%)
+//   1 (1.00%) high mild
+
+// User/Create User        time:   [8.0575 ms 8.0869 ms 8.1416 ms]
+//                         change: [-0.3537% +0.0475% +0.7622%] (p = 0.88 > 0.05)
+//                         No change in performance detected.
+// Found 8 outliers among 100 measurements (8.00%)
+//   3 (3.00%) low mild
+//   4 (4.00%) high mild
+//   1 (1.00%) high severe
