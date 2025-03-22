@@ -10,6 +10,7 @@ use ed25519_dalek::ed25519::signature::SignerMut;
 use ed25519_dalek::pkcs8::DecodePublicKey;
 use state::State;
 
+use std::sync::Mutex;
 use std::{collections::VecDeque, sync::Arc, time::Duration};
 use tonic::IntoRequest;
 
@@ -20,7 +21,7 @@ use color_eyre::eyre::{Result, eyre};
 use log::info;
 use rand_core::OsRng;
 use server::Proxy;
-use tokio::{select, spawn, sync::Mutex, task::JoinHandle, time::sleep};
+use tokio::{select, spawn, task::JoinHandle, time::sleep};
 
 mod auth;
 mod server;
@@ -94,7 +95,6 @@ async fn main() -> Result<()> {
     match args.command {
         Commands::CreateUser {} => {
             let mut rng = OsRng;
-
             let signing_key = ed25519_dalek::SigningKey::generate(&mut rng);
             let verifying_key = signing_key.verifying_key();
 
@@ -111,8 +111,11 @@ async fn main() -> Result<()> {
                 .into_inner()
                 .id;
 
-            let _ = State::new(user_id, signing_key)?;
-            println!("{}", "User Creation Successfull!".green());
+            let _ = State::new(user_id.clone(), signing_key)?;
+            println!(
+                "{}",
+                format!("User Creation Successfull!\nId: {}", user_id).green()
+            );
             Ok(())
         }
 
@@ -161,7 +164,9 @@ async fn main() -> Result<()> {
 
             let closure_devices = devices.clone();
 
-            let recipient_sig = state.user_key.sign(state.user_id.as_bytes());
+            let user_id = state.user_id.parse::<u64>()?;
+
+            let recipient_sig = state.user_key.sign(&user_id.to_le_bytes());
 
             // spawn a task that keeps pulling from sparta on a regular interval
             let handle: JoinHandle<Result<()>> = spawn(async move {
@@ -180,18 +185,19 @@ async fn main() -> Result<()> {
                         info!("pulling!");
                         //NOTE: this only works if adversary cannot observe the plaintext of the communication link between the enclave and the recipient
                         if msg.recipient == state.user_id {
-                            let mut device_vec = closure_devices.lock().await;
+                            let mut device_vec =
+                                closure_devices.lock().expect("should not be poisoned");
                             for device in device_vec.iter_mut() {
                                 device.message_queue.push_back(msg.clone());
                             }
-                        }
-                    } else {
-                        let mut device_vec = closure_devices.lock().await;
-                        for device in device_vec.iter_mut() {
-                            device.dummy_messages += 1;
+                        } else {
+                            let mut device_vec =
+                                closure_devices.lock().expect("Should not be poisoned");
+                            for device in device_vec.iter_mut() {
+                                device.dummy_messages += 1;
+                            }
                         }
                     }
-
                     sleep(delay_time).await;
                 }
             });

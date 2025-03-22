@@ -1,20 +1,21 @@
-use std::{collections::VecDeque, sync::Arc};
+use std::sync::{Arc, Mutex};
 
-use agora::{TROJAN_IP, TROJAN_PORT};
+use agora::{MSG_SIZE, TROJAN_IP, TROJAN_PORT};
 use athens::grpc::{
     Ack, Packet, PacketList, ProxyFetchReq, proxy_service_server::ProxyService,
     trojan_service_client::TrojanServiceClient,
 };
 use color_eyre::eyre::Result;
-use log::error;
-use tokio::sync::Mutex;
+use log::{error, trace};
 use tonic::{Request, Response, Status, async_trait, transport::Channel};
+
+use tokio::sync::Mutex as TMutex;
 
 use crate::Devices;
 
 pub struct ProxyServer {
     devices: Devices,
-    trojan_client: Arc<Mutex<TrojanServiceClient<Channel>>>, // sparta_client: Arc<Mutex<MessageServiceClient<Channel>>>,
+    trojan_client: Arc<TMutex<TrojanServiceClient<Channel>>>, // sparta_client: Arc<Mutex<MessageServiceClient<Channel>>>,
 }
 
 impl ProxyServer {
@@ -24,7 +25,7 @@ impl ProxyServer {
         let trojan_client = TrojanServiceClient::connect(server_url).await?;
         Ok(ProxyServer {
             devices,
-            trojan_client: Arc::new(Mutex::new(trojan_client)),
+            trojan_client: Arc::new(TMutex::new(trojan_client)),
         })
     }
 }
@@ -59,8 +60,10 @@ impl ProxyService for ProxyServer {
                 Status::internal("dw about it")
             })?;
 
-        let mut devices = self.devices.lock().await;
-
+        let mut devices = self.devices.lock().map_err(|e| {
+            error!("Poisoned mutex!{}", e);
+            Status::internal("restart proxy! fatal crash")
+        })?;
         let mut ret = Vec::new();
 
         let device = devices.get_mut(dev_id).expect("device should exist");
@@ -70,9 +73,13 @@ impl ProxyService for ProxyServer {
         }
 
         while device.dummy_messages > 0 {
+            let mut dummy_body = Vec::new();
+
+            dummy_body.resize(MSG_SIZE, 1);
+
             ret.push(Packet {
                 recipient: "dummy".to_string(),
-                body: Vec::new(),
+                body: dummy_body,
             });
 
             device.dummy_messages -= 1;

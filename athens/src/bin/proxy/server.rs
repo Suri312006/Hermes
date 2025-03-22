@@ -28,8 +28,10 @@ impl Proxy {
     }
 
     pub async fn run(self) -> Result<()> {
-        let socket =
-            SocketAddr::from_str(agora::PROXY_PORT).expect("Parsing Socket Address Failed!");
+        let socket = SocketAddr::from_str(
+            format!("{}:{}", agora::PROXY_BIND_ADDR, agora::PROXY_PORT).as_str(),
+        )
+        .expect("Parsing Socket Address Failed!");
         info!("Proxy Listening at {}!", socket);
         self.router.serve(socket).await.map_err(|e| eyre!(e))
     }

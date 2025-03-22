@@ -31,7 +31,11 @@ pub const SPARTA_VSOCK_PORT: u32 = 50051;
 pub const VERIFY_PHRASE: &str = "HERMES";
 
 /// The port that the proxy will bind to.
-pub const PROXY_PORT: &str = "[::1]:50052";
+pub const PROXY_BIND_ADDR: &str = "0.0.0.0";
+
+pub const PROXY_PORT: &str = "50052";
+
+pub const PROXY_IP: &str = "100.92.118.123";
 
 mod log;
 pub use log::*;

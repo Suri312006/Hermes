@@ -36,10 +36,10 @@ traffic coming from anywhere, also probably on port 22 to allow for ssh.
 
  Here are the <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-security-groups.html">AWS docs</a>
 
-2. Connect to your EC2 instance via ssh
+4. Connect to your EC2 instance via ssh
  Here are the <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-connect-methods.html">AWS docs</a>
 
-3. Install the Just command runner
+5. Install the Just command runner
 
   ```bash
   # create ~/bin
@@ -57,9 +57,9 @@ traffic coming from anywhere, also probably on port 22 to allow for ssh.
   just --help  
   ```
 
-4. Run `just init`, which will install the necessary packages for you.
+6. Run `just init`, which will install the necessary packages for you.
 
-5. Then run `just sparta`, which will start both the enclave and the trojan proxy for you.
+7. Then run `just sparta`, which will start both the enclave and the trojan proxy for you.
 
 ## Steps for running benchmarks
 

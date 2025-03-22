@@ -1,4 +1,4 @@
-use agora::{MSG_SIZE, PROXY_PORT};
+use agora::{MSG_SIZE, PROXY_IP, PROXY_PORT, VERIFY_PHRASE};
 use args::{CliArgs, Commands, MessageSubCommands};
 use athens::grpc::{Packet, ProxyFetchReq, proxy_service_client::ProxyServiceClient};
 use clap::Parser;
@@ -8,14 +8,17 @@ use color_eyre::{
 };
 use rand_core::OsRng;
 
-use ed25519_dalek::pkcs8::EncodePublicKey;
+use ed25519_dalek::{ed25519::signature::SignerMut, pkcs8::EncodePublicKey};
+use state::State;
+use tonic::{IntoRequest, metadata::MetadataValue};
 
 mod args;
+mod state;
 #[tokio::main]
 async fn main() -> Result<()> {
     color_eyre::install()?;
 
-    let proxy_url = format!("http://{}", PROXY_PORT);
+    let proxy_url = format!("http://{}:{}", PROXY_IP, PROXY_PORT);
 
     let args = CliArgs::parse();
 
@@ -35,6 +38,8 @@ async fn main() -> Result<()> {
 
             let mut iter = verifying_key.split("\n");
             iter.next();
+
+            State::new(signing_key);
 
             println!(
                 "Registration Key: {}",
@@ -59,16 +64,34 @@ async fn main() -> Result<()> {
                             MSG_SIZE
                         ));
                     }
+
+                    let mut req = Packet {
+                        recipient,
+                        body: message.as_bytes().to_vec(),
+                    }
+                    .into_request();
+
+                    let mut state = State::read()?;
+
+                    let sig = state.signing_key.sign(VERIFY_PHRASE.as_bytes());
+
+                    let sign_str = hex::encode(sig.to_bytes());
+
+                    req.metadata_mut().insert("signature", sign_str.parse()?);
                     //TODO: okay we need to chunk this guy up.
-                    proxy_client
-                        .send(Packet {
-                            recipient,
-                            body: message.as_bytes().to_vec(),
-                        })
-                        .await?;
+                    proxy_client.send(req).await?;
                 }
                 MessageSubCommands::Fetch => {
-                    let msgs = proxy_client.fetch(ProxyFetchReq {}).await?.into_inner();
+                    let mut req = ProxyFetchReq {}.into_request();
+                    let mut state = State::read()?;
+
+                    let sig = state.signing_key.sign(VERIFY_PHRASE.as_bytes());
+
+                    let sign_str = hex::encode(sig.to_bytes());
+
+                    req.metadata_mut().insert("signature", sign_str.parse()?);
+
+                    let msgs = proxy_client.fetch(req).await?.into_inner();
                     for msg in msgs.inner {
                         println!(
                             "From: {:?}\nBody: {:?}",
