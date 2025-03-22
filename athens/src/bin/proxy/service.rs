@@ -6,7 +6,7 @@ use athens::grpc::{
     trojan_service_client::TrojanServiceClient,
 };
 use color_eyre::eyre::Result;
-use log::{error, trace};
+use log::{debug, error, trace};
 use tonic::{Request, Response, Status, async_trait, transport::Channel};
 
 use tokio::sync::Mutex as TMutex;
@@ -34,7 +34,9 @@ impl ProxyServer {
 impl ProxyService for ProxyServer {
     async fn send(self: Arc<Self>, req: Request<Packet>) -> Result<Response<Ack>, Status> {
         let mut client = self.trojan_client.lock().await;
-        let ack = client.send(req.into_inner()).await?.into_inner();
+        let pack = req.into_inner();
+        debug!("sending: {:?}", pack);
+        let ack = client.send(pack).await?.into_inner();
         Ok(Response::new(ack))
     }
 

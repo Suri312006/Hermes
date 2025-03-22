@@ -103,11 +103,9 @@ async fn main() -> Result<()> {
 
                     let msgs = proxy_client.fetch(req).await?.into_inner();
                     for msg in msgs.inner {
-                        println!(
-                            "To: {:?}\nBody: {:?}",
-                            msg.recipient,
-                            String::from_utf8(msg.body)
-                        );
+                        if msg.recipient != *"dummy" {
+                            println!("{:?}", msg);
+                        }
                     }
                 }
             }
