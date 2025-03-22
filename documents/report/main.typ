@@ -1,3 +1,5 @@
+
+#import "@preview/algo:0.3.6": algo, i, d, comment, code
 #import "@preview/ieee-monolith:0.1.0": ieee
 #show: ieee.with(
   title: [Hermes \ Building a practical multi-device  SPARTA],
@@ -11,6 +13,9 @@
   index-terms: ("TEE", "Anonymous Messaging"),
   bibliography: bibliography("refs.bib"),
 )
+
+#show link: underline
+
 
 
 // Introduction. Describe the problem, discuss attacks that lead to your solution, discuss prior works
@@ -47,8 +52,26 @@ implementation running inside an AWS Nitro Enclave!
 = Base Sparta
 
 For the core implementation of SPARTA, I followed the pseudocode provided in the paper #cite(<sparta>).
-As for my language of
-Some of the core things I had the liberty of implementing myself were
+Since an oram is required for all of SPARTA's internal data structures, I used
+#link("https://github.com/facebook/oram/tree/main")[#text(fill: blue)[Facebook's implementation]].
+
+== Facebook PathORAM discussion
+
+The facebook PathORAM implementation requires two things to be cryptographically secure;
+oram clients are running in a secure enclave architecture, that also provides memory
+encryption as they do not encrypt on write themselves. Additionally they implement the
+oblivious position map and stash from Oblix #cite(<oblix>). Like Oblix, its a pure
+rust implementation, and is recursive in nature. It recurses down until the size of
+the oram is small enough to fit inside of a Linear Time ORAM, which maintains oblivousness by
+reading/writing over each memory location per access. I'm unsure why they chose to have a
+constant time ORAM ($O(N)$) for the base case instead of a PathORAM ($O(log(N))$). It would
+be interesting to benchmark the difference between these two base cases.
+
+
+== Personal Implementations
+
+I implemented the other data structures and operations myself, using Facebooks PathORAM as the
+underlying oram data structure.
 
 + Oblivious Select
 
@@ -69,9 +92,26 @@ Some of the core things I had the liberty of implementing myself were
   as state of the art. It boasts a time complexity of  $O(N log(N))$, and operates on the following
   pseudocode.
 
+  
+#algo(
+  title: "UpdateData",
+  parameters: ($r: "Recipient(u64)"$,$u: "UserData(head: u64, tail: u64)"$, $o: "Op({Write, Read})"$),
+  block-align: none,
+  fill: white,
+    // stroke: stroke(thickness:0pt)
+)[
 
+for $a$ in {0, 1, USER_MAX_SIZE}: #i\ 
 
-== Facebook PathORAM discussion
+//TODO: just do this later bro
+
+  
+
+  $"PathORAM" <- "PathORAM"."new"(M)$ #comment[ connect and initialize PathORAM on the server]\
+  zeroth $<-$ UniformRandom($0...M$)\
+  return PathORAM, zeroth
+]
+
 
 = Multi-Device Extension
 // Implementation. Focus on the key design decisions in your code. Do not paste your source code
