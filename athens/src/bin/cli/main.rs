@@ -79,6 +79,8 @@ async fn main() -> Result<()> {
                     }
                     .into_request();
 
+                    println!("Sending this message: {:?}", req);
+
                     let mut state = State::read()?;
 
                     let sig = state.signing_key.sign(VERIFY_PHRASE.as_bytes());
@@ -102,7 +104,7 @@ async fn main() -> Result<()> {
                     let msgs = proxy_client.fetch(req).await?.into_inner();
                     for msg in msgs.inner {
                         println!(
-                            "From: {:?}\nBody: {:?}",
+                            "To: {:?}\nBody: {:?}",
                             msg.recipient,
                             String::from_utf8(msg.body)
                         );
