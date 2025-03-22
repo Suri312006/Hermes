@@ -1,3 +1,4 @@
+use agora::MSG_SIZE;
 use bincode::config::standard;
 use color_eyre::eyre::Result;
 use ed25519_dalek::{Signature, Verifier, VerifyingKey, pkcs8};
@@ -63,7 +64,7 @@ impl MessageService for MessageServer {
             Status::new(tonic::Code::Internal, "Internal Error")
         })?;
 
-        let Some((body, _)) = req.body.as_slice().split_at_checked(MESSAGE_SIZE) else {
+        let Some((body, _)) = req.body.as_slice().split_at_checked(MSG_SIZE) else {
             error!(
                 "Couldnt Split Message, len: {:?}",
                 req.body.as_slice().len()
@@ -72,7 +73,7 @@ impl MessageService for MessageServer {
             return Err(Status::invalid_argument("Bad Message Body"));
         };
 
-        let mut message: [u8; MESSAGE_SIZE] = [0; MESSAGE_SIZE];
+        let mut message: [u8; MSG_SIZE] = [0; MSG_SIZE];
 
         message.copy_from_slice(body);
 
