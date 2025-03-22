@@ -65,9 +65,17 @@ async fn main() -> Result<()> {
                         ));
                     }
 
+                    let mut msg = vec![];
+
+                    msg.resize(MSG_SIZE, 1);
+
+                    for byte in message.as_bytes() {
+                        msg.push(*byte)
+                    }
+
                     let mut req = Packet {
                         recipient,
-                        body: message.as_bytes().to_vec(),
+                        body: msg,
                     }
                     .into_request();
 
